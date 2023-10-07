@@ -30,13 +30,13 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 		t.Errorf("error initializing repo : %v", err)
 		return
 	}
-
+	t.Logf("Repo initialized")
 	err = repo.Ping(ctx)
 	if err != nil {
 		t.Errorf("error pinging repo : %v", err)
 		return
 	}
-
+	t.Logf("Repo pinged")
 	secret, err := repo.Create(ctx,
 		fmt.Sprintf("test body for repo %s", name),
 		map[string]string{
@@ -89,9 +89,9 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 		return
 	}
 	t.Logf("Repo allows to delete secret")
-	secretThatShouldBeNotFound, err := repo.FindByID(ctx, unknownID)
+	secretThatShouldBeNotFound, err := repo.FindByID(ctx, secret.ID)
 	if err != nil {
-		if !errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.SecretNotFoundError) {
 			t.Logf("expected error returned for secret not found")
 		} else {
 			t.Errorf("error finding secret : %v", err)

@@ -76,7 +76,7 @@ func (tr *Transport) ExposeSecretAPI() {
 		logger.Info().
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("secret_id", id).
-			Msgf("Секрет %s получен", id, err)
+			Msgf("Секрет %s получен", id)
 		c.JSON(http.StatusOK, secret)
 	})
 	rest.DELETE("/:id", func(c *gin.Context) {
@@ -104,7 +104,7 @@ func (tr *Transport) ExposeSecretAPI() {
 		logger.Info().
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("secret_id", id).
-			Msgf("Секрет %s удалён", id, err)
+			Msgf("Секрет %s удалён", id)
 		c.AbortWithStatus(http.StatusNoContent)
 	})
 	rest.POST("/", func(c *gin.Context) {

@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -139,21 +140,24 @@ func (pgs *PurserGrpcServer) CreateSecret(ctx context.Context, request *proto.Ne
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
-
-	secret, err := pgs.Service.Create(ctx2, request.Body, convertMetaDTO(request.Meta))
+	meta := convertMetaDTO(request.Meta)
+	meta["subject"] = subject
+	md, found := metadata.FromIncomingContext(ctx)
+	if found {
+		meta["User-Agent"] = md.Get("User-Agent")[0]
+	}
+	secret, err := pgs.Service.Create(ctx2, request.Body, meta)
 	if err != nil {
 		log.Error().Err(err).
 			Str("trace_id", span.SpanContext().TraceID().String()).
-			Str("subject", ctx2.Value(TokenSubjectKey).(string)).
+			Str("subject", subject).
 			Msgf("Ошибка при создании секрета : %s", err)
 		return nil, err
 	}
 	log.Info().
 		Str("trace_id", span.SpanContext().TraceID().String()).
 		Str("secret_id", secret.ID).
-		Str("subject", ctx2.Value(TokenSubjectKey).(string)).
-		Msgf("Пользователь %s создал секрет %s",
-			ctx.Value(TokenSubjectKey).(string), secret.ID,
-		)
+		Str("subject", subject).
+		Msgf("Пользователь %s создал секрет %s", subject, secret.ID)
 	return convertModelToDto(secret), nil
 }
