@@ -18,8 +18,8 @@ import (
 //Permissions-Policy	Permissions Policy is a new header that allows a site to control which features and APIs can be used in the browser.
 
 // Secure makes things more funny
-func Secure(router *gin.Engine) {
-	router.Use(secure.New(secure.Config{
+func Secure() func(c *gin.Context) {
+	return secure.New(secure.Config{
 		AllowedHosts:          []string{config.Domain},
 		SSLRedirect:           true,
 		SSLTemporaryRedirect:  true,
@@ -44,8 +44,12 @@ func Secure(router *gin.Engine) {
 		DontRedirectIPV4Hostnames: true,
 		SSLProxyHeaders:           map[string]string{"X-Forwarded-Proto": "https"},
 		FeaturePolicy:             "geolocation 'none'; microphone 'none'",
-	}))
-	router.Use(func(c *gin.Context) {
-		c.Header("Permissions-Policy", "geolocation=(), microphone=()")
 	})
+}
+
+// AddPermissionPolicyHeader adds permission policy headers
+func AddPermissionPolicyHeader() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Header("Permissions-Policy", "geolocation=(), microphone=()")
+	}
 }

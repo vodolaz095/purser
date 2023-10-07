@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
-ADDR="localhost:3000"
-TOKEN="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2b2RvbGF6MDk1IiwiaWF0IjoxNTE2MjM5MDIzLCJleHAiOjE4MTYyMzkwMjN9.ga-y5GLMIJaoO6-UPY3eTztUQjGNj1QD_7yS0oggse7MKoyUaEZDMcO8ADRm7m6F1oWvSWBpu6hoPfLCQ64Emg"
-BODY="example"
-
+source cmd/shared.sh
+ADDR="http://localhost:3000"
 
 curl -v -X POST \
   -H "Content-Type: application/json" \

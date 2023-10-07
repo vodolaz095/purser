@@ -52,7 +52,7 @@ func (ss *SecretService) Create(ctx context.Context, body string, meta map[strin
 
 // FindByID finds secret by id
 func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret, error) {
-	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.Find")
+	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.FindByID")
 	defer span.End()
 	span.SetAttributes(attribute.String("secret_id", id))
 	span.AddEvent("Searching for secret by id...")
@@ -75,7 +75,7 @@ func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret,
 }
 
 func (ss *SecretService) DeleteByID(ctx context.Context, id string) error {
-	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.Delete")
+	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.DeleteByID")
 	defer span.End()
 	span.SetAttributes(attribute.String("secret_id", id))
 	span.AddEvent("Deleting secret by id...")

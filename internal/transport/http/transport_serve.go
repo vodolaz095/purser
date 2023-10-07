@@ -44,11 +44,12 @@ func Serve(ctx context.Context, opts Options) error {
 				Msgf("error closing http listener on %s : %s", opts.ListenOn, err)
 		}
 	}()
-	middlewares.EmulatePHP(app)
-	middlewares.UseTracing(app)
-	middlewares.Secure(app)
-	middlewares.CheckJWT(app)
-
+	app.Use(
+		middlewares.EmulatePHP(),
+		middlewares.UseTracing(),
+		middlewares.Secure(),
+		middlewares.AddPermissionPolicyHeader(),
+	)
 	tr := Transport{
 		Engine:  app,
 		Service: *opts.Service,

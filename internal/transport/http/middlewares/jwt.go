@@ -9,16 +9,18 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
-func CheckJWT(router *gin.Engine) {
-	router.Use(func(c *gin.Context) {
+func CheckJWT() func(c *gin.Context) {
+	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" {
 			c.String(http.StatusUnauthorized, "Authorization header required")
+			c.Abort()
 			return
 		}
 
 		if !strings.HasPrefix(header, "Bearer ") {
 			c.String(http.StatusUnauthorized, "Authorization header with bearer strategy required")
+			c.Abort()
 			return
 		}
 
@@ -26,9 +28,10 @@ func CheckJWT(router *gin.Engine) {
 		subject, err := pkg.ValidateJwtAndExtractSubject(token, config.JwtSecret)
 		if err != nil {
 			c.String(http.StatusBadRequest, "Error parsing token: %s", err)
+			c.Abort()
 			return
 		}
 		c.Set("subject", subject)
 		c.Next()
-	})
+	}
 }

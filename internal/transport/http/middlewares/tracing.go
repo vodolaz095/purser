@@ -9,9 +9,9 @@ import (
 )
 
 // UseTracing adds open telemetry tracing
-func UseTracing(router *gin.Engine) {
-	router.Use(otelgin.Middleware("purser_rest",
+func UseTracing() func(c *gin.Context) {
+	return otelgin.Middleware("purser_rest",
 		otelgin.WithSpanNameFormatter(func(r *http.Request) string {
 			return r.Method + " " + r.URL.Path
-		})))
+		}))
 }

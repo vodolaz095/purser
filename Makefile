@@ -17,6 +17,11 @@ vuln:
 start:
 	go run main.go
 
+cli_curl:
+	./cmd/curl/create_secret.sh
+
+cli_grpc:
+	./cmd/purser_grpc_client/example.sh
 
 grpc: protoc
 	protoc \
@@ -25,7 +30,6 @@ grpc: protoc
 		--go_out=./ --go_opt=paths=import \
 		--go-grpc_out=./ --go-grpc_opt=paths=import \
         api/grpc/*.proto
-
 
 build: grpc
 	go build -o build/purser main.go
