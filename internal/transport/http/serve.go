@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/vodolaz095/purser/config"
@@ -57,6 +58,11 @@ func Serve(ctx context.Context, opts Options) error {
 
 	tr.ExposeHealthChecks()
 	tr.ExposeSecretAPI()
+
+	if !config.IsProduction() {
+		log.Warn().Msgf("Система удалённой отладки pprof доступна по /debug/pprof!")
+		pprof.Register(app)
+	}
 
 	log.Debug().Msgf("Preparing to start HTTP server on %s...", opts.ListenOn)
 	err = app.RunListener(listener)

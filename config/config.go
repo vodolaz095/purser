@@ -39,6 +39,10 @@ var Domain = "localhost"
 var Driver = "memory"
 var DatabaseConnectionString string
 
+func IsProduction() bool {
+	return Environment == "production"
+}
+
 func init() {
 	var err error
 	loadFromEnvironment(&Environment, "GO_ENV")
