@@ -45,7 +45,7 @@ type PurserGrpcServer struct {
 }
 
 func (pgs *PurserGrpcServer) extractJwtSubject(ctx context.Context) (string, error) {
-	raw := ctx.Value(TokenKey)
+	raw := ctx.Value(TokenSubjectKey)
 	switch raw.(type) {
 	case string:
 		return raw.(string), nil
@@ -60,7 +60,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 
 	subject, err := pgs.extractJwtSubject(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "wrong token subject")
+		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
@@ -81,7 +81,7 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 
 	subject, err := pgs.extractJwtSubject(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "wrong token subject")
+		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
@@ -102,7 +102,7 @@ func (pgs *PurserGrpcServer) CreateSecret(ctx context.Context, request *proto.Ne
 
 	subject, err := pgs.extractJwtSubject(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "wrong token subject")
+		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))

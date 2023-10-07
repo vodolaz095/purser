@@ -34,11 +34,15 @@ var JaegerHost = "127.0.0.1"
 // JaegerPort is used to make connection string for JaegerUI for trace collection
 var JaegerPort = "6831"
 
+var Domain = "localhost"
+
 var Driver = "memory"
 var DatabaseConnectionString string
 
 func init() {
 	var err error
+	loadFromEnvironment(&Environment, "GO_ENV")
+
 	loadFromEnvironment(&Hostname, "HOSTNAME")
 	if Hostname == "" {
 		Hostname, err = os.Hostname()

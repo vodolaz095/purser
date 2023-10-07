@@ -2,26 +2,22 @@ package main
 
 import (
 	"context"
-	"net"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
-	"google.golang.org/grpc"
 
 	"github.com/vodolaz095/purser/config"
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/internal/repository/memory"
 	"github.com/vodolaz095/purser/internal/service"
-	purserGrpcServer "github.com/vodolaz095/purser/internal/transport/grpc"
-	"github.com/vodolaz095/purser/internal/transport/grpc/proto"
+	grpcTransport "github.com/vodolaz095/purser/internal/transport/grpc"
+	httpTransport "github.com/vodolaz095/purser/internal/transport/http"
 	"github.com/vodolaz095/purser/internal/transport/watchdog"
 	"github.com/vodolaz095/purser/pkg"
 )
@@ -119,42 +115,35 @@ func main() {
 		log.Warn().Msgf("Systemd watchdog is disabled, application can be unstable")
 	}
 	// start http server
-
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		lErr := httpTransport.Serve(mainCtx, httpTransport.Options{
+			HmacSecret: config.JwtSecret,
+			ListenOn:   config.ListenHTTP,
+			Service:    &ss,
+		})
+		if lErr != nil {
+			log.Fatal().Err(lErr).Msgf("error starting http server on %s : %s",
+				config.ListenHTTP, lErr)
+		}
+	}()
 	// start grpc server
 	wg.Add(1)
 	go func() {
-		if config.ListenGRPC == "disabled" {
-			return
-		}
-		listener, lErr := net.Listen("tcp", config.ListenGRPC)
-		if err != nil {
-			log.Error().Err(lErr).
-				Msgf("error starting listener on %s: %s", config.ListenGRPC, lErr)
-			return
-		}
-		grpcTransport := purserGrpcServer.PurserGrpcServer{
-			Service: ss,
-		}
-		jwtMiddleware := purserGrpcServer.ValidateJWTInterceptor{HmacSecret: config.JwtSecret}
-		grpcServer := grpc.NewServer(grpc.UnaryInterceptor(
-			grpc_middleware.ChainUnaryServer(
-				otelgrpc.UnaryServerInterceptor(),
-				jwtMiddleware.ServerInterceptor,
-			),
-		))
-		proto.RegisterPurserServer(grpcServer, &grpcTransport)
-		log.Debug().Msgf("Preparing to start GRPC server on %s...", config.ListenGRPC)
-		go func() {
-			<-mainCtx.Done()
-			log.Debug().Msg("Stopping GRPC server...")
-			grpcServer.Stop()
-			wg.Done()
-		}()
-		lErr = grpcServer.Serve(listener)
+		defer wg.Done()
+		lErr := grpcTransport.Serve(mainCtx, grpcTransport.Options{
+			HmacSecret: config.JwtSecret,
+			ListenOn:   config.ListenGRPC,
+			Service:    &ss,
+		})
 		if lErr != nil {
-			log.Error().Err(err).Msgf("error starting grpc server on %s: %s", config.ListenGRPC, err)
+			log.Fatal().Err(lErr).Msgf("error starting grpc server on %s : %s",
+				config.ListenGRPC, lErr)
 		}
 	}()
+
+	// start background routine to prune old secrets
 
 	/*
 	 * Shutdown properly
@@ -173,5 +162,5 @@ func main() {
 	}()
 
 	wg.Wait()
-	log.Debug().Msgf("Application is stopping")
+	log.Debug().Msgf("Application is stopped")
 }

@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/vodolaz095/purser/pkg"
 )
 
@@ -42,6 +44,7 @@ func (ji *ValidateJWTInterceptor) ServerInterceptor(ctx context.Context, req int
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
+	log.Debug().Msgf("JWT token subject = %s", subject)
 	ctxWithToken := context.WithValue(ctx, TokenSubjectKey, subject)
 	return handler(ctxWithToken, req)
 }

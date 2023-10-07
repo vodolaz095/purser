@@ -7,8 +7,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type customClaims struct {
+	jwt.RegisteredClaims
+}
+
 func ValidateJwtAndExtractSubject(raw string, hmacsecret string) (string, error) {
-	token, err := jwt.ParseWithClaims(raw, jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	// https://github.com/dgrijalva/jwt-go/pull/437
+	token, err := jwt.ParseWithClaims(raw, &customClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			// почему ВАЖНО проверять алгоритм подписи токена
 			// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
