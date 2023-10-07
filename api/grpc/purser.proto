@@ -1,0 +1,35 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package purser;
+
+option go_package = "./../../internal/transport/grpc/proto;proto";
+
+message Meta {
+  string Key = 1;
+  string Value = 2;
+}
+
+message SecretByIDRequest {
+  string id = 1;
+}
+
+message NewSecretRequest {
+  string body = 1;
+  repeated Meta meta = 2;
+}
+
+message Package {
+  string id = 1;  // идентификатор секрета "780deb5d-15e3-497e-86b0-f6e356eb5110"
+  string body = 2;
+  repeated Meta meta = 3;
+  google.protobuf.Timestamp CreatedAt = 4;
+  google.protobuf.Timestamp ExpiresAt = 5;
+}
+
+message Nothing {}
+
+service Purser {
+  rpc GetSecretByID(SecretByIDRequest) returns (Package);
+  rpc DeleteSecretByID(SecretByIDRequest) returns (Nothing);
+  rpc CreateSecret(NewSecretRequest) returns (Package);
+}
