@@ -19,7 +19,9 @@ func (tr *Transport) ExposeSecretAPI() {
 		c.AbortWithStatus(http.StatusNotImplemented)
 	})
 	rest.GET("/:id", func(c *gin.Context) {
-		secret, err := tr.Service.FindByID(c.Request.Context(), c.Param("id"))
+		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/GetSecretByID")
+		defer span.End()
+		secret, err := tr.Service.FindByID(ctx2, c.Param("id"))
 		if err != nil {
 			if errors.Is(err, model.SecretNotFoundError) {
 				c.AbortWithStatus(http.StatusNotFound)
@@ -31,7 +33,9 @@ func (tr *Transport) ExposeSecretAPI() {
 		c.JSON(http.StatusOK, secret)
 	})
 	rest.DELETE("/:id", func(c *gin.Context) {
-		err := tr.Service.DeleteByID(c.Request.Context(), c.Param("id"))
+		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/DeleteSecretByID")
+		defer span.End()
+		err := tr.Service.DeleteByID(ctx2, c.Param("id"))
 		if err != nil {
 			if errors.Is(err, model.SecretNotFoundError) {
 				c.AbortWithStatus(http.StatusNotFound)
@@ -43,12 +47,23 @@ func (tr *Transport) ExposeSecretAPI() {
 		c.AbortWithStatus(http.StatusNoContent)
 	})
 	rest.POST("/", func(c *gin.Context) {
+		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/CreateSecret")
+		defer span.End()
+		var found bool
 		var bdy createSecretRequest
 		if err := c.ShouldBindJSON(&bdy); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		secret, err := tr.Service.Create(c.Request.Context(), bdy.Body, bdy.Meta)
+		if bdy.Meta == nil {
+			bdy.Meta = make(map[string]string, 0)
+		}
+		_, found = bdy.Meta["body"]
+		if found {
+			delete(bdy.Meta, "body")
+		}
+		bdy.Meta["User-Agent"] = c.Request.Header.Get("User-Agent")
+		secret, err := tr.Service.Create(ctx2, bdy.Body, bdy.Meta)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return

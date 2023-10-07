@@ -89,7 +89,7 @@ func main() {
 
 	// service
 	ss := service.SecretService{
-		Tracer: otel.Tracer("purser"),
+		Tracer: otel.Tracer("purser_service_tracer"),
 		Repo:   repo,
 	}
 	log.Debug().Msgf("Service initialized!")

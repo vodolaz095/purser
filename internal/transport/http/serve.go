@@ -33,6 +33,8 @@ func Serve(ctx context.Context, opts Options) error {
 	app := gin.New()
 	if config.Environment != "production" {
 		gin.SetMode(gin.DebugMode)
+	} else {
+		app.TrustedPlatform = gin.PlatformCloudflare
 	}
 	go func() {
 		<-ctx.Done()
@@ -45,6 +47,7 @@ func Serve(ctx context.Context, opts Options) error {
 	middlewares.EmulatePHP(app)
 	middlewares.UseTracing(app)
 	middlewares.Secure(app)
+	middlewares.CheckJWT(app)
 
 	tr := Transport{
 		Engine:  app,

@@ -7,7 +7,8 @@ TOKEN="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2b2RvbGF6MDk1IiwiaWF0Ijox
 BODY="example"
 
 
-curl -v -X POST "${ADDR}/api/v1/secret/" \
-  -H "Content-Encoding:application/json" \
+curl -v -X POST \
+  -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
-  --data "{\"body\":\"${BODY}\"}"
+  --data "{\"body\":\"${BODY}\"}" \
+  "${ADDR}/api/v1/secret/"

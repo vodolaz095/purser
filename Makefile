@@ -9,6 +9,10 @@ protoc:
 	which protoc-gen-go
 	which protoc-gen-go-grpc
 
+# https://go.dev/blog/govulncheck
+# install it by go install golang.org/x/vuln/cmd/govulncheck@latest
+vuln:
+	govulncheck ./...
 
 start:
 	go run main.go
