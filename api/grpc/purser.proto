@@ -2,7 +2,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 package purser;
 
-option go_package = "./../../internal/transport/grpc/proto;proto";
+option go_package = "./internal/transport/grpc/proto;proto";
 
 message Meta {
   string Key = 1;
@@ -18,7 +18,7 @@ message NewSecretRequest {
   repeated Meta meta = 2;
 }
 
-message Package {
+message Secret {
   string id = 1;  // идентификатор секрета "780deb5d-15e3-497e-86b0-f6e356eb5110"
   string body = 2;
   repeated Meta meta = 3;
@@ -29,7 +29,7 @@ message Package {
 message Nothing {}
 
 service Purser {
-  rpc GetSecretByID(SecretByIDRequest) returns (Package);
+  rpc GetSecretByID(SecretByIDRequest) returns (Secret);
   rpc DeleteSecretByID(SecretByIDRequest) returns (Nothing);
-  rpc CreateSecret(NewSecretRequest) returns (Package);
+  rpc CreateSecret(NewSecretRequest) returns (Secret);
 }
