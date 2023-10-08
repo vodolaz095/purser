@@ -19,6 +19,8 @@ func SetupJaeger(hostname, environment, jaegerHost, jaegerPort string) error {
 	tp := tracesdk.NewTracerProvider(
 		// Always be sure to batch in production.
 		tracesdk.WithBatcher(exp),
+		// sample 10% of data to save bandwidth
+		tracesdk.WithSampler(tracesdk.TraceIDRatioBased(0.1)),
 		// Record information about this application in a Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
