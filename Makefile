@@ -15,7 +15,7 @@ vuln:
 	govulncheck ./...
 
 start:
-	go run main.go
+	forego start purser
 
 cli_curl:
 	./cmd/curl/create_secret.sh

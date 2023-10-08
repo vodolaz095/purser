@@ -6,15 +6,14 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/config"
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/internal/repository/memory"
+	"github.com/vodolaz095/purser/internal/repository/redis"
 	"github.com/vodolaz095/purser/internal/service"
 	grpcTransport "github.com/vodolaz095/purser/internal/transport/grpc"
 	httpTransport "github.com/vodolaz095/purser/internal/transport/http"
@@ -29,15 +28,7 @@ func main() {
 	var err error
 
 	// logging
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp}
-	sink := zerolog.New(output).
-		With().Timestamp().Caller().
-		Str("hostname", config.Hostname).
-		Str("environment", config.Environment).
-		Logger().Level(zerolog.DebugLevel)
-	log.Logger = sink
-
-	log.Debug().Msgf("Application starting...")
+	pkg.SetupLogger()
 
 	// handle signals
 	sigc := make(chan os.Signal, 1)
@@ -59,7 +50,7 @@ func main() {
 		config.JaegerHost,
 		config.JaegerPort,
 	)
-	log.Debug().Msgf("Dialing jaeger on %s:%s", config.JaegerHost, config.JaegerHost)
+	log.Debug().Msgf("Dialing jaeger on %s:%s", config.JaegerHost, config.JaegerPort)
 
 	if err != nil {
 		log.Fatal().Err(err).Msgf("error setting jaeger upd transfort for telemetry into %s:%s : %s",
@@ -71,6 +62,11 @@ func main() {
 	switch config.Driver {
 	case "memory":
 		repo = &memory.Repo{}
+		break
+	case "redis":
+		repo = &redis.Repository{RedisConnectionString: config.DatabaseConnectionString}
+		break
+	case "mariadb", "mysql":
 		break
 	default:
 		log.Fatal().Msgf("unknown database driver: %s", config.Driver)

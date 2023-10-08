@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// https://gorm.io/docs/models.html
+
 const TTL = 3 * time.Hour
 
 var SecretNotFoundError = errors.New("secret not found")

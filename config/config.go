@@ -7,19 +7,19 @@ import (
 	"strconv"
 )
 
-// Hostname depicts hostname applicaiton is running on
+// Hostname задает имя сервера, на котором работает приложение
 var Hostname string
 
-// Environment depicts application environment, like development, testing, staging, production and so on
+// Environment задаёт тип окружения приложения - продовое, тестовое и т.д.
 var Environment = "development"
 
-// Address depicts network interface, on which application is listening
+// Address задаёт адрес, на котором слушает приложение, по умолчанию - на всех адресах
 var Address = ""
 
-// ListenHTTP shows where HTTP server is binding
+// ListenHTTP задаёт адрес, где слушает HTTP сервер
 var ListenHTTP = ":3000"
 
-// ListenGRPC shows where GRPC server is binding
+// ListenGRPC задаёт адрес, где слушает GRPC сервер
 var ListenGRPC = ":3001"
 
 // Port depicts network port, on which application is listening
@@ -34,10 +34,14 @@ var JaegerHost = "127.0.0.1"
 // JaegerPort is used to make connection string for JaegerUI for trace collection
 var JaegerPort = "6831"
 
+// Domain задаёт домен, на котором работает HTTP и GRPC серверы
 var Domain = "localhost"
 
 var Driver = "memory"
 var DatabaseConnectionString string
+
+var LogOutput = string(LogOutputConsole)
+var LogLevel = "debug"
 
 func IsProduction() bool {
 	return Environment == "production"
@@ -71,6 +75,11 @@ func init() {
 
 	loadFromEnvironment(&JaegerHost, "JAEGER_HOST")
 	loadFromEnvironment(&JaegerPort, "JAEGER_PORT")
+
 	loadFromEnvironment(&Driver, "DRIVER")
 	loadFromEnvironment(&DatabaseConnectionString, "DB_URL")
+
+	loadFromEnvironment(&LogOutput, "LOG_OUTPUT")
+	loadFromEnvironment(&LogLevel, "LOG_LEVEL")
+
 }
