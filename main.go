@@ -8,12 +8,13 @@ import (
 	"syscall"
 
 	"github.com/rs/zerolog/log"
-	"github.com/vodolaz095/purser/internal/repository/mysql"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/config"
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/internal/repository/memory"
+	"github.com/vodolaz095/purser/internal/repository/mysql"
+	"github.com/vodolaz095/purser/internal/repository/postgresql"
 	"github.com/vodolaz095/purser/internal/repository/redis"
 	"github.com/vodolaz095/purser/internal/service"
 	grpcTransport "github.com/vodolaz095/purser/internal/transport/grpc"
@@ -69,6 +70,9 @@ func main() {
 		break
 	case "mariadb", "mysql":
 		repo = &mysql.Repository{DatabaseConnectionString: config.DatabaseConnectionString}
+		break
+	case "postgres", "pgx":
+		repo = &postgresql.Repository{DatabaseConnectionString: config.DatabaseConnectionString}
 		break
 	default:
 		log.Fatal().Msgf("unknown database driver: %s", config.Driver)

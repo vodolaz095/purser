@@ -12,3 +12,4 @@ CREATE INDEX secret_created_at_index ON secret (created_at DESC);
 
 -- +goose Down
 DROP TABLE secret;
+DROP EXTENSION IF EXISTS hstore;
