@@ -63,4 +63,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.1 // indirect
 	gorm.io/gorm v1.25.4 // indirect
+	gorm.io/plugin/opentelemetry v0.1.4 // indirect
 )

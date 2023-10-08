@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/rs/zerolog/log"
+	"github.com/vodolaz095/purser/internal/repository/mysql"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/config"
@@ -67,6 +68,7 @@ func main() {
 		repo = &redis.Repository{RedisConnectionString: config.DatabaseConnectionString}
 		break
 	case "mariadb", "mysql":
+		repo = &mysql.Repository{DatabaseConnectionString: config.DatabaseConnectionString}
 		break
 	default:
 		log.Fatal().Msgf("unknown database driver: %s", config.Driver)

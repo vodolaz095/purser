@@ -6,11 +6,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/vodolaz095/purser/pkg"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 
 	"github.com/vodolaz095/purser/model"
+	"github.com/vodolaz095/purser/pkg"
 )
 
 type secretData struct {
@@ -43,6 +44,11 @@ func (r *Repository) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	err = db.Use(tracing.NewPlugin(tracing.WithoutMetrics()))
+	if err != nil {
+		return err
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		return err
