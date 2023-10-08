@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	_ "github.com/jackc/pgx/v5/stdlib" // https://stackoverflow.com/questions/76865674/how-to-use-goose-migrations-with-pgx
@@ -26,7 +27,12 @@ func (r *Repository) Ping(ctx context.Context) error {
 }
 
 func (r *Repository) Init(ctx context.Context) error {
-	conn, err := pgx.Connect(ctx, r.DatabaseConnectionString)
+	opts, err := pgx.ParseConfig(r.DatabaseConnectionString)
+	if err != nil {
+		return err
+	}
+	opts.Tracer = otelpgx.NewTracer()
+	conn, err := pgx.ConnectConfig(ctx, opts)
 	if err != nil {
 		return err
 	}

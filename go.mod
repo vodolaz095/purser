@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/exaring/otelpgx v0.5.2
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/secure v0.0.1
 	github.com/gin-gonic/gin v1.9.1
