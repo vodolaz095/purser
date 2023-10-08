@@ -1,7 +1,8 @@
 -- +goose Up
+CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE TABLE secret
 (
-    id         uuid NOT NULL,
+    id         uuid NOT NULL default gen_random_uuid(),
     body       text,
     meta       hstore,
     created_at timestamp default now(),
