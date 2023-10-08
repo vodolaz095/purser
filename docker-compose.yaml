@@ -3,9 +3,19 @@ version: "3.8"
 volumes:
   redis_data:
   mariadb_data:
+  pg_data:
 
 services:
+  # сборщик метрик для open-telemetry - WebUI - http://localhost:16686
+  # Документация https://opentelemetry.io/docs/instrumentation/go/getting-started/
+  # пример в Go - https://github.com/open-telemetry/opentelemetry-go/blob/v1.10.0/example/jaeger/main.go
+  jaeger:
+    image: jaegertracing/all-in-one:1.37
+    ports:
+      - "16686:16686"    # тут слушает web-ui
+      - "6831:6831/udp"  # сюда приходят данные по UDP
 
+  # https://hub.docker.com/_/redis
   redis:
     image: redis:7-alpine
     ports:
@@ -13,6 +23,7 @@ services:
     volumes:
       - redis_data:/data
 
+  # https://hub.docker.com/_/mariadb
   mariadb:
     image: mariadb:10.3.28
     environment:
@@ -22,3 +33,14 @@ services:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+
+  # https://hub.docker.com/_/postgres
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: purser
+      POSTGRES_PASSWORD: purser
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
