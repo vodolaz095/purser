@@ -48,6 +48,8 @@ type PurserGrpcServer struct {
 }
 
 func (pgs *PurserGrpcServer) extractJwtSubject(ctx context.Context) (string, error) {
+	// также тут можно вызывать некое хранилище отозванных токенов, чтобы проверить,
+	// что этот ещё работает, а также можно проверить роли и разрешения пользователя
 	raw := ctx.Value(TokenSubjectKey)
 	switch raw.(type) {
 	case string:
