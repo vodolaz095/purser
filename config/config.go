@@ -47,6 +47,17 @@ func IsProduction() bool {
 	return Environment == "production"
 }
 
+// имхо вообще весь конфиг должен быть таким
+
+// var Addr = ""
+// var HttpPort = 3000
+// var GrpcPort = 3001
+// var EtcdAddr = "http://localhost:2379"
+// var EtcdUsername string
+// var EtcdPassword string
+
+// всё остальное подгружается из etcd
+
 func init() {
 	var err error
 	loadFromEnvironment(&Environment, "GO_ENV")

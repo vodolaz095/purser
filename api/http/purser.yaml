@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Purser
+  description: API for saving secrets
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:3000/'
+    description: Local host
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /api/v1/secret/{id}:
+    delete:
+      summary: Deletes secret by id
+      parameters:
+        - name: id
+          in: path
+          description: Unique ID of secret
+      security:
+        - BearerAuth: [ ]
+      responses:
+        500:
+          description: Internal server error
+        401:
+          description: JWT token authorization failed
+        404:
+          description: Secret is not found
+        204:
+          description: Secret is deleted
+    get:
+      summary: Returns a secret by id
+      parameters:
+        - name: id
+          in: path
+          description: Unique ID of secret
+      security:
+        - BearerAuth: [ ]
+      responses:
+        500:
+          description: Internal server error
+        401:
+          description: JWT token authorization failed
+        404:
+          description: Secret is not found
+        200:
+          description: Secret is found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  body:
+                    type: string
+                  fields:
+                    type: object
+                  createdAt:
+                    type: string
+                  expireAt:
+                    type: string
+                example:
+                  id: '563ecc12-25a0-41a5-9e12-31e340b0ef8e'
+                  body: 'Тут какой-то текст'
+                  fields: '{"a":"b"}'
+                  createdAt: '2023-10-13T20:51:27.848Z'
+                  expireAt: '2023-11-13T20:51:27.848Z'
+  /api/v1/secret/:
+    post:
+      summary: Creates new secret
+      requestBody:
+        description: Secret parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  required: true
+                meta:
+                  type: object
+      security:
+        - BearerAuth: [ ]
+      responses:
+        500:
+          description: Internal server error
+        401:
+          description: JWT token authorization failed
+        201:
+          description: Secret created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Location of secret created
+              example: '/api/v1/secrets/{id}'
+  /ping:
+    get:
+      summary: Ensures api is reachable
+      responses:
+        204:
+          description: API is reachable
+  /healthcheck:
+    get:
+      summary: Performs healthcheck
+      responses:
+        500:
+          description: Internal server error
+        200:
+          description: Healthcheck passed
