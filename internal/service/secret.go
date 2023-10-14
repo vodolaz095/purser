@@ -13,7 +13,6 @@ import (
 
 // SecretService реализует всю бизнес логику работы с сущностью model.Secret
 type SecretService struct {
-	Ready  bool
 	Tracer trace.Tracer
 	Repo   repository.SecretRepo
 }

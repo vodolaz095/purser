@@ -19,6 +19,8 @@ paths:
       parameters:
         - name: id
           in: path
+          schema:
+            type: string
           description: Unique ID of secret
       security:
         - BearerAuth: [ ]
@@ -36,6 +38,8 @@ paths:
       parameters:
         - name: id
           in: path
+          schema:
+            type: string
           description: Unique ID of secret
       security:
         - BearerAuth: [ ]
@@ -82,7 +86,6 @@ paths:
               properties:
                 body:
                   type: string
-                  required: true
                 meta:
                   type: object
       security:

@@ -16,6 +16,10 @@ deps:
 	go mod verify
 	go mod tidy
 
+oapi:
+	which sed # dnf install sed
+	which oapi-codegen # go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+	cd ./api/http && ./generate.sh
 
 protoc:
 	which protoc

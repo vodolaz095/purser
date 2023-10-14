@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,7 +12,8 @@ import (
 
 type Repo struct {
 	sync.RWMutex
-	data map[string]model.Secret
+	data   map[string]model.Secret
+	Broken bool
 }
 
 func (r *Repo) Init(ctx context.Context) error {
@@ -20,6 +22,9 @@ func (r *Repo) Init(ctx context.Context) error {
 }
 
 func (r *Repo) Ping(ctx context.Context) error {
+	if r.Broken {
+		return fmt.Errorf("service is broken")
+	}
 	return nil
 }
 

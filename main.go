@@ -30,10 +30,10 @@ func main() {
 	defer cancel()
 	var err error
 
-	// logging
+	// настраиваем логгирование
 	pkg.SetupLogger()
 
-	// handle signals
+	// настраиваем приём сигналов от операционной системы сигналы
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGHUP,
 		syscall.SIGINT,
@@ -47,6 +47,7 @@ func main() {
 		cancel()
 	}()
 
+	// настраиваем соединение с приёмником телеметрии
 	log.Debug().Msgf("Соединяемся с сервисом телеметрии по %s:%s", config.JaegerHost, config.JaegerPort)
 	err = pkg.SetupJaeger(
 		config.Hostname,
@@ -59,7 +60,9 @@ func main() {
 			config.JaegerHost, config.JaegerPort, err)
 	}
 
-	// repository
+	/*
+	 * Настраиваем репозиторий для объектов типа model.Secret
+	 */
 	var repo repository.SecretRepo
 	switch config.Driver {
 	case "memory":
@@ -89,11 +92,12 @@ func main() {
 	}
 	log.Debug().Msgf("Репозиторий готов к работе!")
 
-	// counter service
+	/*
+	 * Настраиваем сервисы
+	 */
 	cs := service.CounterService{}
 	cs.Init()
 
-	// secret service
 	ss := service.SecretService{
 		Tracer: otel.Tracer("purser_service_tracer"),
 		Repo:   repo,
@@ -104,13 +108,11 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msgf("ошибка проверки сервиса секретов: %s", err)
 	}
-	ss.Ready = true
-
 	/*
-	 * Transports
+	 * Настраиваем транспорты
 	 */
 
-	// start systemd watchdog
+	// запускаем systemd watchdog который будет проверять корректность работы сервиса под управлением systemd
 	supported, err := watchdog.Ready()
 	if err != nil {
 		log.Fatal().Err(err).Msgf("ошибка проверки Systemd Watchdog : %s", err)

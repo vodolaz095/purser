@@ -56,7 +56,9 @@ func (tr *Transport) ExposeMetrics() {
 				if err != nil {
 					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())
-					log.Error().Err(err).Msgf("ошибка отправки данных", err)
+					log.Error().Err(err).
+						Msgf("ошибка отправки данных: %s", err)
+					break
 				}
 			}
 		}
