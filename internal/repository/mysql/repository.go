@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -117,7 +116,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, err
 	var databaseSecretData secretData
 	err := r.db.WithContext(ctx).First(&databaseSecretData, "id = ?", id).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == gorm.ErrRecordNotFound {
 			return model.Secret{}, model.ErrSecretNotFound
 		}
 		return model.Secret{}, err
@@ -143,8 +142,8 @@ func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, err
 
 // DeleteByID удаляет секрет по идентификатору
 func (r *Repository) DeleteByID(ctx context.Context, id string) error {
-	return r.db.WithContext(ctx).
-		Delete(&secretData{}, id).Error
+	return r.db.WithContext(ctx).Where("id = ?", id).
+		Delete(&secretData{}).Error
 }
 
 // Prune удаляет старые секреты
