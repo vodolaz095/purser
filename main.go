@@ -167,19 +167,12 @@ func main() {
 		wg.Done()
 	}()
 
-	// Ждём, как контекст завершится, чтобы правильно закрыть репозиторий
-	wg.Add(1)
-	go func() {
-		<-mainCtx.Done()
-		log.Debug().Msgf("Завершение главного контекста приложения")
-		errCloseRepo := repo.Close(context.Background())
-		if errCloseRepo != nil {
-			log.Error().Err(errCloseRepo).Msgf("Ошибка закрытия репозитория: %s", errCloseRepo)
-		}
-		log.Debug().Msgf("Репозиторий закрыт")
-		wg.Done()
-	}()
-
 	wg.Wait()
+	errCloseRepo := repo.Close(context.Background())
+	if errCloseRepo != nil {
+		log.Error().Err(errCloseRepo).Msgf("Ошибка закрытия репозитория: %s", errCloseRepo)
+	}
+	log.Debug().Msgf("Репозиторий закрыт")
+
 	log.Info().Msgf("Сервис остановлен штатно")
 }
