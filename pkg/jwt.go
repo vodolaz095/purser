@@ -11,6 +11,7 @@ type customClaims struct {
 	jwt.RegisteredClaims
 }
 
+// ValidateJwtAndExtractSubject проверяет JWT токен и извлекает из него subject
 func ValidateJwtAndExtractSubject(raw string, hmacsecret string) (string, error) {
 	// https://github.com/dgrijalva/jwt-go/pull/437
 	token, err := jwt.ParseWithClaims(raw, &customClaims{}, func(token *jwt.Token) (interface{}, error) {

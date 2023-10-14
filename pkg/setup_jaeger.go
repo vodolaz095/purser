@@ -8,6 +8,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
+// SetupJaeger внезапно, настраивает систему отправки телеметрии
 func SetupJaeger(hostname, version, environment, jaegerHost, jaegerPort string) error {
 	exp, err := jaeger.New(jaeger.WithAgentEndpoint(
 		jaeger.WithAgentHost(jaegerHost),

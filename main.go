@@ -100,6 +100,7 @@ func main() {
 	 */
 	cs := service.CounterService{}
 	cs.Init()
+	log.Debug().Msgf("Сервис счетчиков инициализирован!")
 
 	ss := service.SecretService{
 		Tracer: otel.Tracer("purser_service_tracer"),
@@ -125,6 +126,7 @@ func main() {
 	} else {
 		log.Warn().Msgf("Systemd Watchdog не активирован, работа приложения может быть нестабильной")
 	}
+
 	// Запускаем HTTP сервер
 	wg.Add(1)
 	go func() {
@@ -140,6 +142,7 @@ func main() {
 				config.ListenHTTP, lErr)
 		}
 	}()
+
 	// Запускаем gRPC сервер
 	wg.Add(1)
 	go func() {
@@ -176,6 +179,7 @@ func main() {
 		log.Debug().Msgf("Репозиторий закрыт")
 		wg.Done()
 	}()
+
 	wg.Wait()
 	log.Info().Msgf("Сервис остановлен штатно")
 }

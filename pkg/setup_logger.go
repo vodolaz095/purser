@@ -11,10 +11,9 @@ import (
 	"github.com/vodolaz095/purser/config"
 )
 
+// SetupLogger внезапно, настраивает систему логгирования
 func SetupLogger(hostname, environment, version string) {
-
 	var output io.Writer
-
 	switch config.LogOutputType(config.LogOutput) {
 	case config.LogOutputConsole:
 		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp}
@@ -60,5 +59,5 @@ func SetupLogger(hostname, environment, version string) {
 		Logger().Level(level)
 	log.Logger = sink
 
-	log.Debug().Msgf("Application starting...")
+	log.Debug().Msgf("Логгирование настроено!")
 }
