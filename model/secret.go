@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
-// https://gorm.io/docs/models.html
-
+// TTL задаёт срок жизни секрета
 const TTL = 3 * time.Hour
 
+// SecretNotFoundError ошибка, возвращаемая, если секрет не найден в хранилище
 var SecretNotFoundError = errors.New("secret not found")
 
+// Secret - структура данных с которой работает приложение
 type Secret struct {
 	ID        string            `json:"id"`
 	Body      string            `json:"body"`
@@ -19,6 +20,7 @@ type Secret struct {
 	ExpireAt  time.Time         `json:"expireAt"`
 }
 
+// Expired проверяет, устарел ни секрет
 func (s Secret) Expired() bool {
 	return s.ExpireAt.Before(time.Now())
 }

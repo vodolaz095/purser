@@ -2,10 +2,14 @@ package service
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/internal/repository/memory"
+	"github.com/vodolaz095/purser/internal/repository/mysql"
+	"github.com/vodolaz095/purser/internal/repository/postgresql"
+	"github.com/vodolaz095/purser/internal/repository/redis"
 	"go.opentelemetry.io/otel"
 )
 
@@ -40,13 +44,37 @@ func TestSecretServiceMemory(t *testing.T) {
 }
 
 func TestSecretServiceMysql(t *testing.T) {
-	t.Skipf("not implemented")
+	mysqlConnectionString := os.Getenv("MARIADB_DB_URL")
+	if mysqlConnectionString != "" {
+		repo := mysql.Repository{
+			DatabaseConnectionString: mysqlConnectionString,
+		}
+		secretServiceTester(t, &repo)
+	} else {
+		t.Skipf("Переменная окружения MARIADB_DB_URL не задана - пропускаем тест")
+	}
 }
 
 func TestSecretServiceRedis(t *testing.T) {
-	t.Skipf("not implemented")
+	redisConnectionString := os.Getenv("REDIS_DB_URL")
+	if redisConnectionString != "" {
+		repo := redis.Repository{
+			RedisConnectionString: redisConnectionString,
+		}
+		secretServiceTester(t, &repo)
+	} else {
+		t.Skipf("Переменная окружения REDIS_DB_URL не задана - пропускаем тест")
+	}
 }
 
 func TestSecretServicePostgresql(t *testing.T) {
-	t.Skipf("not implemented")
+	pgConString := os.Getenv("POSTGRES_DB_URL")
+	if pgConString != "" {
+		repo := postgresql.Repository{
+			DatabaseConnectionString: pgConString,
+		}
+		secretServiceTester(t, &repo)
+	} else {
+		t.Skipf("Переменная окружения POSTGRES_DB_URL не задана - пропускаем тест")
+	}
 }

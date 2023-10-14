@@ -6,45 +6,19 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"github.com/vodolaz095/purser/internal/service"
+	"github.com/vodolaz095/purser/internal/transport/grpc/proto"
+	"github.com/vodolaz095/purser/model"
 	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/vodolaz095/purser/internal/service"
-	"github.com/vodolaz095/purser/internal/transport/grpc/proto"
-	"github.com/vodolaz095/purser/model"
 )
-
-func convertModelToDto(secret model.Secret) *proto.Secret {
-	meta := make([]*proto.Meta, len(secret.Meta))
-	for k := range secret.Meta {
-		meta = append(meta, &proto.Meta{
-			Key:   k,
-			Value: secret.Meta[k],
-		})
-	}
-	return &proto.Secret{
-		Id:        secret.ID,
-		Body:      secret.Body,
-		Meta:      meta,
-		CreatedAt: timestamppb.New(secret.CreatedAt),
-		ExpiresAt: timestamppb.New(secret.ExpireAt),
-	}
-}
-
-func convertMetaDTO(meta []*proto.Meta) (ret map[string]string) {
-	ret = make(map[string]string, len(meta))
-	for k := range meta {
-		ret[meta[k].Key] = meta[k].Value
-	}
-	return
-}
 
 type PurserGrpcServer struct {
 	proto.UnimplementedPurserServer
-	Service service.SecretService
+	SecretService  *service.SecretService
+	CounterService *service.CounterService
 }
 
 func (pgs *PurserGrpcServer) extractJwtSubject(ctx context.Context) (string, error) {
@@ -60,7 +34,7 @@ func (pgs *PurserGrpcServer) extractJwtSubject(ctx context.Context) (string, err
 }
 
 func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.SecretByIDRequest) (*proto.Secret, error) {
-	ctx2, span := pgs.Service.Tracer.Start(ctx, "transport/grpc/GetSecretByID")
+	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/GetSecretByID")
 	defer span.End()
 
 	subject, err := pgs.extractJwtSubject(ctx)
@@ -69,10 +43,11 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
-
-	secret, err := pgs.Service.FindByID(ctx2, request.GetId())
+	pgs.CounterService.Increment(ctx2, "grpc_get_secret_called", 1)
+	secret, err := pgs.SecretService.FindByID(ctx2, request.GetId())
 	if err != nil {
 		if errors.Is(err, model.SecretNotFoundError) {
+			pgs.CounterService.Increment(ctx2, "grpc_get_secret_not_found", 1)
 			log.Debug().
 				Str("trace_id", span.SpanContext().TraceID().String()).
 				Str("secret_id", request.GetId()).
@@ -82,6 +57,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 				)
 			return nil, status.Errorf(codes.NotFound, "secret %s is not found", request.GetId())
 		}
+		pgs.CounterService.Increment(ctx2, "grpc_get_secret_error", 1)
 		log.Error().Err(err).
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("secret_id", request.GetId()).
@@ -89,6 +65,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 			Msgf("Ошибка при поиске секрета %s: %s", request.GetId(), err)
 		return nil, err
 	}
+	pgs.CounterService.Increment(ctx2, "grpc_get_secret_success", 1)
 	log.Info().
 		Str("trace_id", span.SpanContext().TraceID().String()).
 		Str("secret_id", request.GetId()).
@@ -100,7 +77,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 }
 
 func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *proto.SecretByIDRequest) (*proto.Nothing, error) {
-	ctx2, span := pgs.Service.Tracer.Start(ctx, "transport/grpc/DeleteSecretByID")
+	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/DeleteSecretByID")
 	defer span.End()
 
 	subject, err := pgs.extractJwtSubject(ctx)
@@ -109,12 +86,15 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
+	pgs.CounterService.Increment(ctx2, "grpc_delete_secret_called", 1)
 
-	err = pgs.Service.DeleteByID(ctx2, request.GetId())
+	err = pgs.SecretService.DeleteByID(ctx2, request.GetId())
 	if err != nil {
 		if errors.Is(err, model.SecretNotFoundError) {
+			pgs.CounterService.Increment(ctx2, "grpc_delete_secret_not_found", 1)
 			return nil, status.Errorf(codes.NotFound, "secret %s is not found", request.GetId())
 		}
+		pgs.CounterService.Increment(ctx2, "grpc_delete_secret_error", 1)
 		log.Error().Err(err).
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("secret_id", request.GetId()).
@@ -122,6 +102,7 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 			Msgf("Ошибка при удалении секрета %s : %s", request.GetId(), err)
 		return nil, err
 	}
+	pgs.CounterService.Increment(ctx2, "grpc_delete_secret_success", 1)
 	log.Info().
 		Str("trace_id", span.SpanContext().TraceID().String()).
 		Str("secret_id", request.GetId()).
@@ -133,29 +114,31 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 }
 
 func (pgs *PurserGrpcServer) CreateSecret(ctx context.Context, request *proto.NewSecretRequest) (*proto.Secret, error) {
-	ctx2, span := pgs.Service.Tracer.Start(ctx, "transport/grpc/CreateSecret")
+	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/CreateSecret")
 	defer span.End()
-
 	subject, err := pgs.extractJwtSubject(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	span.AddEvent("JWT token validated")
 	span.SetAttributes(attribute.String("subject", subject))
+	pgs.CounterService.Increment(ctx2, "grpc_create_secret_called", 1)
 	meta := convertMetaDTO(request.Meta)
 	meta["subject"] = subject
 	md, found := metadata.FromIncomingContext(ctx)
 	if found {
 		meta["User-Agent"] = md.Get("User-Agent")[0]
 	}
-	secret, err := pgs.Service.Create(ctx2, request.Body, meta)
+	secret, err := pgs.SecretService.Create(ctx2, request.Body, meta)
 	if err != nil {
+		pgs.CounterService.Increment(ctx2, "grpc_create_secret_error", 1)
 		log.Error().Err(err).
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("subject", subject).
 			Msgf("Ошибка при создании секрета : %s", err)
 		return nil, err
 	}
+	pgs.CounterService.Increment(ctx2, "grpc_create_secret_success", 1)
 	log.Info().
 		Str("trace_id", span.SpanContext().TraceID().String()).
 		Str("secret_id", secret.ID).

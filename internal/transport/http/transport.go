@@ -6,6 +6,7 @@ import (
 )
 
 type Transport struct {
-	Engine  *gin.Engine
-	Service service.SecretService
+	Engine         *gin.Engine
+	SecretService  *service.SecretService
+	CounterService *service.CounterService
 }

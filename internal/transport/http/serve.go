@@ -15,9 +15,10 @@ import (
 )
 
 type Options struct {
-	HmacSecret string
-	ListenOn   string
-	Service    *service.SecretService
+	HmacSecret     string
+	ListenOn       string
+	SecretService  *service.SecretService
+	CounterService *service.CounterService
 }
 
 func Serve(ctx context.Context, opts Options) error {
@@ -39,11 +40,13 @@ func Serve(ctx context.Context, opts Options) error {
 	}
 	go func() {
 		<-ctx.Done()
+		log.Debug().Msg("Останавливаем HTTP сервер...")
 		err = listener.Close()
 		if err != nil {
 			log.Error().Err(err).
 				Msgf("error closing http listener on %s : %s", opts.ListenOn, err)
 		}
+		log.Debug().Msg("HTTP сервер остановлен")
 	}()
 	app.Use(
 		middlewares.EmulatePHP(),
@@ -52,12 +55,14 @@ func Serve(ctx context.Context, opts Options) error {
 		middlewares.AddPermissionPolicyHeader(),
 	)
 	tr := Transport{
-		Engine:  app,
-		Service: *opts.Service,
+		Engine:         app,
+		SecretService:  opts.SecretService,
+		CounterService: opts.CounterService,
 	}
 
 	tr.ExposeHealthChecks()
 	tr.ExposeSecretAPI()
+	tr.ExposeMetrics()
 
 	if !config.IsProduction() {
 		log.Warn().Msgf("Система удалённой отладки pprof доступна по /debug/pprof!")

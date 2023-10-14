@@ -1,6 +1,8 @@
 package config
 
-// LogOutput задаёт куда и как выводятся логи
+import "time"
+
+// LogOutputType задаёт куда и как выводятся логи
 type LogOutputType string
 
 const (
@@ -8,3 +10,5 @@ const (
 	LogOutputStdOutJSON LogOutputType = "stdout_json"
 	LogOutputJournald   LogOutputType = "journald"
 )
+
+const PruneOldSecretsInterval = 30 * time.Second

@@ -11,13 +11,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// SecretService реализует всю бизнес логику работы с сущностью model.Secret
 type SecretService struct {
 	Ready  bool
 	Tracer trace.Tracer
 	Repo   repository.SecretRepo
 }
 
-// Ping ensures repository of service is online
+// Ping проверяет, что репозиторий, а также все другие ресурсы\системы, от которых зависит сервис, работоспособны
 func (ss *SecretService) Ping(ctx context.Context) error {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.Ping")
 	defer span.End()
@@ -31,7 +32,7 @@ func (ss *SecretService) Ping(ctx context.Context) error {
 	return nil
 }
 
-// Create creates new secret
+// Create создаёт новый секрет
 func (ss *SecretService) Create(ctx context.Context, body string, meta map[string]string) (model.Secret, error) {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.Create")
 	defer span.End()
@@ -50,7 +51,7 @@ func (ss *SecretService) Create(ctx context.Context, body string, meta map[strin
 	return secret, err
 }
 
-// FindByID finds secret by id
+// FindByID ищет секрет по идентификатору, если не нашёл, то возвращает ошибку model.SecretNotFoundError
 func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret, error) {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.FindByID")
 	defer span.End()
@@ -74,6 +75,7 @@ func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret,
 	return secret, nil
 }
 
+// DeleteByID удаляет секрет по идентификатору
 func (ss *SecretService) DeleteByID(ctx context.Context, id string) error {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.DeleteByID")
 	defer span.End()
@@ -92,6 +94,7 @@ func (ss *SecretService) DeleteByID(ctx context.Context, id string) error {
 	return err
 }
 
+// Prune удаляет устаревшие секреты
 func (ss *SecretService) Prune(ctx context.Context) error {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.Prune")
 	defer span.End()

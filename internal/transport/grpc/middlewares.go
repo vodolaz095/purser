@@ -14,9 +14,10 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
-const TokenKey = "jwt_token"
+// TokenSubjectKey задаёт, где в контексте хранится subject из JWT токена
 const TokenSubjectKey = "jwt_token_subject"
 
+// ValidateJWTInterceptor валидирует JWT токены во входящих запросах
 type ValidateJWTInterceptor struct {
 	HmacSecret string
 }

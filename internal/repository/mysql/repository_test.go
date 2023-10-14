@@ -1,14 +1,20 @@
 package mysql
 
 import (
+	"os"
 	"testing"
 
 	"github.com/vodolaz095/purser/internal/repotest"
 )
 
 func TestRepo(t *testing.T) {
-	mr := Repository{
-		DatabaseConnectionString: "root:purser@tcp(127.0.0.1:3306)/purser?charset=utf8&parseTime=True&loc=Local",
+	mysqlConnectionString := os.Getenv("MARIADB_DB_URL")
+	if mysqlConnectionString != "" {
+		repo := Repository{
+			DatabaseConnectionString: mysqlConnectionString,
+		}
+		repotest.ValidateRepo(t, "mariadb", &repo)
+	} else {
+		t.Skipf("Переменная окружения MARIADB_DB_URL не задана - пропускаем тест")
 	}
-	repotest.ValidateRepo(t, "mariadb", &mr)
 }

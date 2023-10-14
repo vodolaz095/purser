@@ -37,10 +37,10 @@ func StartWatchdog(ctx context.Context, ss *service.SecretService) {
 			if err != nil {
 				log.Error().Err(err).Msgf("%s: while sending watchdog notification", err)
 			} else {
-				log.Debug().Msgf("Service is healthy!")
+				log.Debug().Msgf("SecretService is healthy!")
 			}
 		} else {
-			log.Error().Err(err).Msgf("Service is broken! Ping error: %s", err)
+			log.Error().Err(err).Msgf("SecretService is broken! Ping error: %s", err)
 		}
 		cancel()
 	}

@@ -52,13 +52,15 @@ func (tr *Transport) ExposeSecretAPI() {
 		c.AbortWithStatus(http.StatusNotImplemented)
 	})
 	rest.GET("/:id", func(c *gin.Context) {
-		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/GetSecretByID")
+		ctx2, span := tr.SecretService.Tracer.Start(c.Request.Context(), "transport/http/GetSecretByID")
 		defer span.End()
 		logger := makeLogger(c)
 		id := c.Param("id")
-		secret, err := tr.Service.FindByID(ctx2, id)
+		tr.CounterService.Increment(ctx2, "http_get_secret_called", 1)
+		secret, err := tr.SecretService.FindByID(ctx2, id)
 		if err != nil {
 			if errors.Is(err, model.SecretNotFoundError) {
+				tr.CounterService.Increment(ctx2, "http_get_secret_not_found", 1)
 				logger.Info().
 					Str("trace_id", span.SpanContext().TraceID().String()).
 					Str("secret_id", id).
@@ -66,34 +68,7 @@ func (tr *Transport) ExposeSecretAPI() {
 				c.AbortWithStatus(http.StatusNotFound)
 				return
 			}
-			logger.Error().Err(err).
-				Str("trace_id", span.SpanContext().TraceID().String()).
-				Str("secret_id", id).
-				Msgf("Ошибка при поиске секреа %s : %s", id, err)
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		logger.Info().
-			Str("trace_id", span.SpanContext().TraceID().String()).
-			Str("secret_id", id).
-			Msgf("Секрет %s получен", id)
-		c.JSON(http.StatusOK, secret)
-	})
-	rest.DELETE("/:id", func(c *gin.Context) {
-		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/DeleteSecretByID")
-		defer span.End()
-		logger := makeLogger(c)
-		id := c.Param("id")
-		err := tr.Service.DeleteByID(ctx2, c.Param("id"))
-		if err != nil {
-			if errors.Is(err, model.SecretNotFoundError) {
-				logger.Info().
-					Str("trace_id", span.SpanContext().TraceID().String()).
-					Str("secret_id", id).
-					Msgf("Секрет %s не найден", id)
-				c.AbortWithStatus(http.StatusNotFound)
-				return
-			}
+			tr.CounterService.Increment(ctx2, "http_get_secret_error", 1)
 			logger.Error().Err(err).
 				Str("trace_id", span.SpanContext().TraceID().String()).
 				Str("secret_id", id).
@@ -101,6 +76,39 @@ func (tr *Transport) ExposeSecretAPI() {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+		tr.CounterService.Increment(ctx2, "http_get_secret_success", 1)
+		logger.Info().
+			Str("trace_id", span.SpanContext().TraceID().String()).
+			Str("secret_id", id).
+			Msgf("Секрет %s получен", id)
+		c.JSON(http.StatusOK, secret)
+	})
+	rest.DELETE("/:id", func(c *gin.Context) {
+		ctx2, span := tr.SecretService.Tracer.Start(c.Request.Context(), "transport/http/DeleteSecretByID")
+		defer span.End()
+		logger := makeLogger(c)
+		id := c.Param("id")
+		tr.CounterService.Increment(ctx2, "http_delete_secret_called", 1)
+		err := tr.SecretService.DeleteByID(ctx2, c.Param("id"))
+		if err != nil {
+			if errors.Is(err, model.SecretNotFoundError) {
+				tr.CounterService.Increment(ctx2, "http_delete_secret_not_found", 1)
+				logger.Info().
+					Str("trace_id", span.SpanContext().TraceID().String()).
+					Str("secret_id", id).
+					Msgf("Секрет %s не найден", id)
+				c.AbortWithStatus(http.StatusNotFound)
+				return
+			}
+			tr.CounterService.Increment(ctx2, "http_delete_secret_error", 1)
+			logger.Error().Err(err).
+				Str("trace_id", span.SpanContext().TraceID().String()).
+				Str("secret_id", id).
+				Msgf("Ошибка при поиске секрета %s : %s", id, err)
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		tr.CounterService.Increment(ctx2, "http_delete_secret_success", 1)
 		logger.Info().
 			Str("trace_id", span.SpanContext().TraceID().String()).
 			Str("secret_id", id).
@@ -108,8 +116,9 @@ func (tr *Transport) ExposeSecretAPI() {
 		c.AbortWithStatus(http.StatusNoContent)
 	})
 	rest.POST("/", func(c *gin.Context) {
-		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/CreateSecret")
+		ctx2, span := tr.SecretService.Tracer.Start(c.Request.Context(), "transport/http/CreateSecret")
 		defer span.End()
+		tr.CounterService.Increment(ctx2, "http_create_secret_called", 1)
 		logger := makeLogger(c)
 		subject, found := c.Get("subject")
 		if !found {
@@ -118,6 +127,7 @@ func (tr *Transport) ExposeSecretAPI() {
 		}
 		var bdy createSecretRequest
 		if err := c.ShouldBindJSON(&bdy); err != nil {
+			tr.CounterService.Increment(ctx2, "http_create_secret_malformed", 1)
 			logger.Info().Err(err).
 				Str("trace_id", span.SpanContext().TraceID().String()).
 				Msgf("Ошибка при валидации секрета: %s", err)
@@ -133,14 +143,16 @@ func (tr *Transport) ExposeSecretAPI() {
 		}
 		bdy.Meta["User-Agent"] = c.Request.Header.Get("User-Agent")
 		bdy.Meta["Subject"] = subject.(string)
-		secret, err := tr.Service.Create(ctx2, bdy.Body, bdy.Meta)
+		secret, err := tr.SecretService.Create(ctx2, bdy.Body, bdy.Meta)
 		if err != nil {
+			tr.CounterService.Increment(ctx2, "http_create_secret_error", 1)
 			logger.Error().Err(err).
 				Str("trace_id", span.SpanContext().TraceID().String()).
 				Msgf("Ошибка при создании секрета: %s", err)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+		tr.CounterService.Increment(ctx2, "http_create_secret_success", 1)
 		logger.Info().Err(err).
 			Str("secret_id", secret.ID).
 			Str("trace_id", span.SpanContext().TraceID().String()).

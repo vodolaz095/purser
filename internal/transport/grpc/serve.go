@@ -13,9 +13,10 @@ import (
 )
 
 type Options struct {
-	HmacSecret string
-	ListenOn   string
-	Service    *service.SecretService
+	HmacSecret     string
+	ListenOn       string
+	SecretService  *service.SecretService
+	CounterService *service.CounterService
 }
 
 func Serve(ctx context.Context, opts Options) error {
@@ -29,7 +30,8 @@ func Serve(ctx context.Context, opts Options) error {
 		return err
 	}
 	grpcTransport := PurserGrpcServer{
-		Service: *opts.Service,
+		SecretService:  opts.SecretService,
+		CounterService: opts.CounterService,
 	}
 	jwtMiddleware := ValidateJWTInterceptor{HmacSecret: opts.HmacSecret}
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(
@@ -50,5 +52,6 @@ func Serve(ctx context.Context, opts Options) error {
 		log.Error().Err(err).Msgf("error starting grpc server on %s: %s", opts.ListenOn, err)
 		return err
 	}
+	log.Debug().Msg("GRPC сервер остановлен...")
 	return nil
 }

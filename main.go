@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/rs/zerolog/log"
+	"github.com/vodolaz095/purser/internal/transport/prune"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/config"
@@ -42,20 +43,19 @@ func main() {
 	)
 	go func() {
 		s := <-sigc
-		log.Info().Msgf("Signal %s is received", s.String())
+		log.Info().Msgf("Получен сигнал %s от операционной системы...", s.String())
 		cancel()
 	}()
 
+	log.Debug().Msgf("Соединяемся с сервисом телеметрии по %s:%s", config.JaegerHost, config.JaegerPort)
 	err = pkg.SetupJaeger(
 		config.Hostname,
 		config.Environment,
 		config.JaegerHost,
 		config.JaegerPort,
 	)
-	log.Debug().Msgf("Dialing jaeger on %s:%s", config.JaegerHost, config.JaegerPort)
-
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error setting jaeger upd transfort for telemetry into %s:%s : %s",
+		log.Fatal().Err(err).Msgf("Ошибка соединяемся с сервисом телеметрии по %s:%s : %s",
 			config.JaegerHost, config.JaegerPort, err)
 	}
 
@@ -75,30 +75,34 @@ func main() {
 		repo = &postgresql.Repository{DatabaseConnectionString: config.DatabaseConnectionString}
 		break
 	default:
-		log.Fatal().Msgf("unknown database driver: %s", config.Driver)
+		log.Fatal().Msgf("неизвестный драйвер базы данных для репозитория: %s", config.Driver)
 	}
 	err = repo.Init(mainCtx)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error pinging repo: %s", err)
+		log.Fatal().Err(err).Msgf("ошибка инициализации репозитория: %s", err)
 	}
-	log.Debug().Msgf("Repo initialized!")
+	log.Debug().Msgf("Репозиторий инициализирован!")
 
 	err = repo.Ping(mainCtx)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error pinging repo: %s", err)
+		log.Fatal().Err(err).Msgf("ошибка проверки репозитория: %s", err)
 	}
-	log.Debug().Msgf("Repo online!")
+	log.Debug().Msgf("Репозиторий готов к работе!")
 
-	// service
+	// counter service
+	cs := service.CounterService{}
+	cs.Init()
+
+	// secret service
 	ss := service.SecretService{
 		Tracer: otel.Tracer("purser_service_tracer"),
 		Repo:   repo,
 	}
-	log.Debug().Msgf("Service initialized!")
+	log.Debug().Msgf("Сервис секретов инициализирован!")
 
 	err = ss.Ping(mainCtx)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error pinging service: %s", err)
+		log.Fatal().Err(err).Msgf("ошибка проверки сервиса секретов: %s", err)
 	}
 	ss.Ready = true
 
@@ -109,60 +113,64 @@ func main() {
 	// start systemd watchdog
 	supported, err := watchdog.Ready()
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error checking watchdog system: %s", err)
+		log.Fatal().Err(err).Msgf("ошибка проверки Systemd Watchdog : %s", err)
 	}
 	if supported {
 		go watchdog.StartWatchdog(mainCtx, &ss)
 	} else {
-		log.Warn().Msgf("Systemd watchdog is disabled, application can be unstable")
+		log.Warn().Msgf("Systemd Watchdog не активирован, работа приложения может быть нестабильной")
 	}
-	// start http server
+	// Запускаем HTTP сервер
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		lErr := httpTransport.Serve(mainCtx, httpTransport.Options{
-			HmacSecret: config.JwtSecret,
-			ListenOn:   config.ListenHTTP,
-			Service:    &ss,
+			HmacSecret:     config.JwtSecret,
+			ListenOn:       config.ListenHTTP,
+			SecretService:  &ss,
+			CounterService: &cs,
 		})
 		if lErr != nil {
-			log.Fatal().Err(lErr).Msgf("error starting http server on %s : %s",
+			log.Fatal().Err(lErr).Msgf("Ошибка запуска HTTP сервера на %s : %s",
 				config.ListenHTTP, lErr)
 		}
 	}()
-	// start grpc server
+	// Запускаем gRPC сервер
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		lErr := grpcTransport.Serve(mainCtx, grpcTransport.Options{
-			HmacSecret: config.JwtSecret,
-			ListenOn:   config.ListenGRPC,
-			Service:    &ss,
+			HmacSecret:     config.JwtSecret,
+			ListenOn:       config.ListenGRPC,
+			SecretService:  &ss,
+			CounterService: &cs,
 		})
 		if lErr != nil {
-			log.Fatal().Err(lErr).Msgf("error starting grpc server on %s : %s",
+			log.Fatal().Err(lErr).Msgf("Ошибка запуска gRPC сервера на %s : %s",
 				config.ListenGRPC, lErr)
 		}
 	}()
 
-	// start background routine to prune old secrets
-
-	/*
-	 * Shutdown properly
-	 */
-
-	// wait for main context to cancel
+	// запускаем фоновой процесс очистки старых документов
+	av := prune.Autovacuum{Service: ss}
 	wg.Add(1)
 	go func() {
-		<-mainCtx.Done()
-		log.Info().Msgf("Closing main context...")
-		errCloseRepo := repo.Close(context.Background())
-		if errCloseRepo != nil {
-			log.Error().Err(errCloseRepo).Msgf("Error closing repo: %s", errCloseRepo)
-		}
+		av.StartPruningExpiredSecrets(mainCtx, config.PruneOldSecretsInterval)
 		wg.Done()
 	}()
 
+	// Ждём, как контекст завершится, чтобы правильно закрыть репозиторий
+	wg.Add(1)
+	go func() {
+		<-mainCtx.Done()
+		log.Debug().Msgf("Завершение главного контекста приложения")
+		errCloseRepo := repo.Close(context.Background())
+		if errCloseRepo != nil {
+			log.Error().Err(errCloseRepo).Msgf("Ошибка закрытия репозитория: %s", errCloseRepo)
+		}
+		log.Debug().Msgf("Репозиторий закрыт")
+		wg.Done()
+	}()
 	wg.Wait()
-	log.Debug().Msgf("Application is stopped")
+	log.Info().Msgf("Сервис остановлен штатно")
 }

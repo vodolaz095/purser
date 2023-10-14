@@ -9,19 +9,23 @@ import (
 
 func (tr *Transport) ExposeHealthChecks() {
 	tr.Engine.GET("/ping", func(c *gin.Context) {
+		tr.CounterService.Increment(c.Request.Context(), "ping_http", 1)
 		c.AbortWithStatus(http.StatusNoContent)
 	})
 	tr.Engine.GET("/healthcheck", func(c *gin.Context) {
-		ctx2, span := tr.Service.Tracer.Start(c.Request.Context(), "transport/http/healthcheck")
+		ctx2, span := tr.SecretService.Tracer.Start(c.Request.Context(), "transport/http/healthcheck")
 		defer span.End()
-		err := tr.Service.Ping(ctx2)
+		tr.CounterService.Increment(ctx2, "healthcheck_http_called", 1)
+		err := tr.SecretService.Ping(ctx2)
 		if err != nil {
+			tr.CounterService.Increment(ctx2, "healthcheck_http_failed", 1)
 			log.Error().Err(err).
 				Str("trace_id", span.SpanContext().TraceID().String()).
 				Msgf("Ошибка при проверке сервиса: %s", err)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+		tr.CounterService.Increment(ctx2, "healthcheck_http_ok", 1)
 		span.AddEvent("Сервис работает")
 		log.Debug().
 			Str("trace_id", span.SpanContext().TraceID().String()).
