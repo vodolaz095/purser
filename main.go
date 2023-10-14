@@ -24,6 +24,8 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
+var Version = "development"
+
 func main() {
 	wg := sync.WaitGroup{}
 	mainCtx, cancel := context.WithCancel(context.Background())
@@ -31,7 +33,7 @@ func main() {
 	var err error
 
 	// настраиваем логгирование
-	pkg.SetupLogger()
+	pkg.SetupLogger(config.Hostname, config.Environment, Version)
 
 	// настраиваем приём сигналов от операционной системы сигналы
 	sigc := make(chan os.Signal, 1)
@@ -51,6 +53,7 @@ func main() {
 	log.Debug().Msgf("Соединяемся с сервисом телеметрии по %s:%s", config.JaegerHost, config.JaegerPort)
 	err = pkg.SetupJaeger(
 		config.Hostname,
+		Version,
 		config.Environment,
 		config.JaegerHost,
 		config.JaegerPort,

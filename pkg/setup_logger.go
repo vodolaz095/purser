@@ -11,7 +11,7 @@ import (
 	"github.com/vodolaz095/purser/config"
 )
 
-func SetupLogger() {
+func SetupLogger(hostname, environment, version string) {
 
 	var output io.Writer
 
@@ -54,8 +54,9 @@ func SetupLogger() {
 
 	sink := zerolog.New(output).
 		With().Timestamp().Caller().
-		Str("hostname", config.Hostname).
-		Str("environment", config.Environment).
+		Str("hostname", hostname).
+		Str("environment", environment).
+		Str("version", version).
 		Logger().Level(level)
 	log.Logger = sink
 

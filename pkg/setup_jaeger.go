@@ -8,7 +8,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
-func SetupJaeger(hostname, environment, jaegerHost, jaegerPort string) error {
+func SetupJaeger(hostname, version, environment, jaegerHost, jaegerPort string) error {
 	exp, err := jaeger.New(jaeger.WithAgentEndpoint(
 		jaeger.WithAgentHost(jaegerHost),
 		jaeger.WithAgentPort(jaegerPort),
@@ -27,6 +27,7 @@ func SetupJaeger(hostname, environment, jaegerHost, jaegerPort string) error {
 			semconv.ServiceNameKey.String("purser"),
 			semconv.HostNameKey.String(hostname),
 			semconv.DeploymentEnvironmentKey.String(environment),
+			semconv.ServiceVersion(version),
 		)),
 	)
 	// Register our TracerProvider as the global so any imported
