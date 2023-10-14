@@ -9,6 +9,11 @@ export ver=$(majorVersion).$(minorVersion).$(patchVersion).$(gittip)-$(arch)
 export registry="reg.vodolaz095.ru"
 export image="purser"
 
+lint:
+	gofmt  -w=true -s=true -l=true ./
+	golint ./...
+	go vet ./...
+
 
 deps:
 	go mod download

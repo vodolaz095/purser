@@ -37,12 +37,19 @@ var JaegerPort = "6831"
 // Domain задаёт домен, на котором работает HTTP и GRPC серверы
 var Domain = "localhost"
 
+// Driver задаёт название драйвера базы данных
 var Driver = "memory"
+
+// DatabaseConnectionString - задаёт строку соединения с базой данных
 var DatabaseConnectionString string
 
+// LogOutput задаёт куда выводить логи
 var LogOutput = string(LogOutputConsole)
+
+// LogLevel задаёт уровень логгирования
 var LogLevel = "debug"
 
+// IsProduction возвращает истину, если приложение работает в продовом окружении
 func IsProduction() bool {
 	return Environment == "production"
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
+// CheckJWT проверяет JWT токен из входящего запроса
 func CheckJWT() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")

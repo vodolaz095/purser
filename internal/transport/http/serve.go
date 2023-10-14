@@ -14,6 +14,7 @@ import (
 	"github.com/vodolaz095/purser/internal/service"
 )
 
+// Options задают параметры запуска HTTP транспорта
 type Options struct {
 	HmacSecret     string
 	ListenOn       string
@@ -22,6 +23,7 @@ type Options struct {
 	CounterService *service.CounterService
 }
 
+// Serve запускает HTTP транспорт
 func Serve(ctx context.Context, opts Options) error {
 	var err error
 	if opts.ListenOn == "disabled" {

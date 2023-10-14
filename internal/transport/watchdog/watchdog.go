@@ -9,10 +9,12 @@ import (
 	"github.com/vodolaz095/purser/internal/service"
 )
 
+// Ready оповещяет Systemd Watchdog, что сервис запущен
 func Ready() (supported bool, err error) {
 	return daemon.SdNotify(false, daemon.SdNotifyReady)
 }
 
+// StartWatchdog запускает оповещения Systemd Watchdog, что сервис работоспособен
 func StartWatchdog(ctx context.Context, ss *service.SecretService) {
 	var err error
 	interval, err := daemon.SdWatchdogEnabled(false)

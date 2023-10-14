@@ -6,9 +6,13 @@ import "time"
 type LogOutputType string
 
 const (
-	LogOutputConsole    LogOutputType = "console"
+	// LogOutputConsole задаёт вывод логов в стандартный вывод в красивом формате с подсветкой
+	LogOutputConsole LogOutputType = "console"
+	// LogOutputStdOutJSON задаёт вывод логов в стандартный вывод в кодировке JSON
 	LogOutputStdOutJSON LogOutputType = "stdout_json"
-	LogOutputJournald   LogOutputType = "journald"
+	// LogOutputJournald задаёт вывод логов в сокет системы журналирования systemd journald
+	LogOutputJournald LogOutputType = "journald"
 )
 
+// PruneOldSecretsInterval задаёт интервал очистки старых секретов
 const PruneOldSecretsInterval = 30 * time.Second

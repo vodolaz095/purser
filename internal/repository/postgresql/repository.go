@@ -17,15 +17,18 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+// Repository реализует интерфейс SecretRepo с базой данных postgresql внутри
 type Repository struct {
 	DatabaseConnectionString string
 	conn                     *pgx.Conn
 }
 
+// Ping проверяет соединение с базой данных
 func (r *Repository) Ping(ctx context.Context) error {
 	return r.conn.Ping(ctx)
 }
 
+// Init настраивает соединение с базой данных
 func (r *Repository) Init(ctx context.Context) error {
 	opts, err := pgx.ParseConfig(r.DatabaseConnectionString)
 	if err != nil {
@@ -56,10 +59,12 @@ func (r *Repository) Init(ctx context.Context) error {
 	return nil
 }
 
+// Close закрывает соединение с базой данных
 func (r *Repository) Close(ctx context.Context) error {
 	return r.conn.Close(ctx)
 }
 
+// Create создаёт новый model.Secret
 func (r *Repository) Create(ctx context.Context, body string, meta map[string]string) (model.Secret, error) {
 	var secret model.Secret
 	now := time.Now()
@@ -83,6 +88,7 @@ func (r *Repository) Create(ctx context.Context, body string, meta map[string]st
 	return secret, nil
 }
 
+// FindByID ищет model.Secret по идентификатору
 func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, error) {
 	var secret model.Secret
 	dbMeta := make(pgtype.Hstore, 0)
@@ -90,7 +96,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, err
 	err := row.Scan(&secret.Body, &dbMeta, &secret.CreatedAt)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return model.Secret{}, model.SecretNotFoundError
+			return model.Secret{}, model.ErrSecretNotFound
 		}
 		return model.Secret{}, err
 	}
@@ -103,11 +109,13 @@ func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, err
 	return secret, nil
 }
 
+// DeleteByID удаляет секрет по идентификатору
 func (r *Repository) DeleteByID(ctx context.Context, id string) error {
 	_, err := r.conn.Exec(ctx, "DELETE FROM secret WHERE id = $1::uuid", id)
 	return err
 }
 
+// Prune удаляет старые секреты
 func (r *Repository) Prune(ctx context.Context) error {
 	_, err := r.conn.Exec(ctx, "DELETE FROM secret WHERE created_at < $1", time.Now().Add(-model.TTL))
 	return err

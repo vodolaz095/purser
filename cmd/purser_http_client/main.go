@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	purser_client "github.com/vodolaz095/purser/api/http"
+	"github.com/vodolaz095/purser/api/openapi"
 )
 
 func main() {
@@ -34,13 +34,13 @@ func main() {
 	flag.StringVar(&del, "del", "", "id of secret to be deleted")
 	flag.Parse()
 
-	client, err := purser_client.New(address, token)
+	client, err := openapi.New(address, token)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Ошибка соединения с API через %s: %s", address, err)
 	}
 
 	if body != "" {
-		resp, err = client.PostApiV1Secret(mainCtx, purser_client.PostApiV1SecretJSONRequestBody{
+		resp, err = client.PostApiV1Secret(mainCtx, openapi.PostApiV1SecretJSONRequestBody{
 			Body: &body,
 		})
 		if err != nil {
@@ -59,7 +59,7 @@ func main() {
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Ошибка получения секрета %s: %s", id, err)
 		}
-		secret, err := purser_client.ParseGetApiV1SecretIdResponse(resp)
+		secret, err := openapi.ParseGetApiV1SecretIdResponse(resp)
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Ошибка получения секрета %s: %s", id, err)
 		}

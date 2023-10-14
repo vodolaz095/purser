@@ -1,4 +1,4 @@
-package purser_client
+package openapi
 
 import (
 	"context"

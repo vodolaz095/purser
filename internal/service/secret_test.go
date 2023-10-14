@@ -39,7 +39,7 @@ func secretServiceTester(t *testing.T, repo repository.SecretRepo) {
 }
 
 func TestSecretServiceMemory(t *testing.T) {
-	repo := memory.Repo{}
+	repo := memory.Repository{}
 	secretServiceTester(t, &repo)
 }
 

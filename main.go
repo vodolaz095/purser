@@ -24,6 +24,7 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
+// Version содержит версию программы, задаётся при процессе компиляции
 var Version = "development"
 
 func main() {
@@ -69,7 +70,7 @@ func main() {
 	var repo repository.SecretRepo
 	switch config.Driver {
 	case "memory":
-		repo = &memory.Repo{}
+		repo = &memory.Repository{}
 		break
 	case "redis":
 		repo = &redis.Repository{RedisConnectionString: config.DatabaseConnectionString}

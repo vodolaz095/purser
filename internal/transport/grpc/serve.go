@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Options задают параметры функции Serve для запуска grpc сервера
 type Options struct {
 	HmacSecret     string
 	ListenOn       string
@@ -19,6 +20,7 @@ type Options struct {
 	CounterService *service.CounterService
 }
 
+// Serve запускает GRPC сервер
 func Serve(ctx context.Context, opts Options) error {
 	if opts.ListenOn == "disabled" {
 		return nil

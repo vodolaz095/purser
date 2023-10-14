@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// PurserGrpcServer реализует grpc сервер
 type PurserGrpcServer struct {
 	proto.UnimplementedPurserServer
 	SecretService  *service.SecretService
@@ -33,6 +34,7 @@ func (pgs *PurserGrpcServer) extractJwtSubject(ctx context.Context) (string, err
 	}
 }
 
+// GetSecretByID загружает секрет по его идентификатору
 func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.SecretByIDRequest) (*proto.Secret, error) {
 	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/GetSecretByID")
 	defer span.End()
@@ -46,7 +48,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 	pgs.CounterService.Increment(ctx2, "grpc_get_secret_called", 1)
 	secret, err := pgs.SecretService.FindByID(ctx2, request.GetId())
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			pgs.CounterService.Increment(ctx2, "grpc_get_secret_not_found", 1)
 			log.Debug().
 				Str("trace_id", span.SpanContext().TraceID().String()).
@@ -76,6 +78,7 @@ func (pgs *PurserGrpcServer) GetSecretByID(ctx context.Context, request *proto.S
 	return convertModelToDto(secret), nil
 }
 
+// DeleteSecretByID удаляет секрет по его идентификатору
 func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *proto.SecretByIDRequest) (*proto.Nothing, error) {
 	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/DeleteSecretByID")
 	defer span.End()
@@ -90,7 +93,7 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 
 	err = pgs.SecretService.DeleteByID(ctx2, request.GetId())
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			pgs.CounterService.Increment(ctx2, "grpc_delete_secret_not_found", 1)
 			return nil, status.Errorf(codes.NotFound, "secret %s is not found", request.GetId())
 		}
@@ -113,6 +116,7 @@ func (pgs *PurserGrpcServer) DeleteSecretByID(ctx context.Context, request *prot
 	return nil, nil
 }
 
+// CreateSecret создаёт новый секрет и возвращает его идентификатор
 func (pgs *PurserGrpcServer) CreateSecret(ctx context.Context, request *proto.NewSecretRequest) (*proto.Secret, error) {
 	ctx2, span := pgs.SecretService.Tracer.Start(ctx, "transport/grpc/CreateSecret")
 	defer span.End()

@@ -14,8 +14,11 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
+// TokenSubjectKeyType задаёт тип для субъекта jwt токена
+type TokenSubjectKeyType string
+
 // TokenSubjectKey задаёт, где в контексте хранится subject из JWT токена
-const TokenSubjectKey = "jwt_token_subject"
+const TokenSubjectKey = TokenSubjectKeyType("jwt_token_subject")
 
 // ValidateJWTInterceptor валидирует JWT токены во входящих запросах
 type ValidateJWTInterceptor struct {

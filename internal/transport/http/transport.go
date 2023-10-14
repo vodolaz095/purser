@@ -5,6 +5,7 @@ import (
 	"github.com/vodolaz095/purser/internal/service"
 )
 
+// Transport реализует HTTP сервер, который вызывается curl-ом
 type Transport struct {
 	Engine         *gin.Engine
 	Hostname       string

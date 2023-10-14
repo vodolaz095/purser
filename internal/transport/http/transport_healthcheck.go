@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ExposeHealthChecks включает ответчики для проверки работоспособности сервиса
 func (tr *Transport) ExposeHealthChecks() {
 	tr.Engine.GET("/ping", func(c *gin.Context) {
 		tr.CounterService.Increment(c.Request.Context(), "ping_http", 1)

@@ -8,7 +8,7 @@ import (
 )
 
 func TestRepo(t *testing.T) {
-	var mr Repo
+	var mr Repository
 	repotest.ValidateRepo(t, "memory", &mr)
 
 	mr.Broken = true

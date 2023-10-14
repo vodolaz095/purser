@@ -13,6 +13,7 @@ import (
 	"github.com/vodolaz095/purser/pkg"
 )
 
+// ValidateRepo используется в юнит тестах, чтобы базово проверить репозиторий
 func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 	ctx := context.TODO()
 	var err error
@@ -71,14 +72,15 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 
 	secretNotFound, err := repo.FindByID(ctx, unknownID)
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			t.Logf("expected error returned for secret not found")
 		} else {
 			t.Errorf("error finding secret : %v", err)
+			return
 		}
-		return
 	} else {
 		t.Error("error not thrown for secret not found")
+		return
 	}
 	assert.Nil(t, secretNotFound, "not found secret is not nill")
 	t.Logf("Repo %s returns proper error for secret not found", name)
@@ -91,7 +93,7 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 	t.Logf("Repo allows to delete secret")
 	secretThatShouldBeNotFound, err := repo.FindByID(ctx, secret.ID)
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			t.Logf("expected error returned for secret not found")
 		} else {
 			t.Errorf("error finding secret : %v", err)

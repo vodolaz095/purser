@@ -43,6 +43,8 @@ var metricsToExpose = []string{
 	"http_create_secret_success",
 }
 
+// ExposeMetrics включает ответчики для получения метрик в формате Prometheus
+// https://prometheus.io/docs/instrumenting/exposition_formats/#text-format-example
 func (tr *Transport) ExposeMetrics() {
 	tr.Engine.GET("/metrics", func(c *gin.Context) {
 		var err error

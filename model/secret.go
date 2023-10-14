@@ -8,8 +8,8 @@ import (
 // TTL задаёт срок жизни секрета
 const TTL = 3 * time.Hour
 
-// SecretNotFoundError ошибка, возвращаемая, если секрет не найден в хранилище
-var SecretNotFoundError = errors.New("secret not found")
+// ErrSecretNotFound ошибка, возвращаемая, если секрет не найден в хранилище
+var ErrSecretNotFound = errors.New("secret not found")
 
 // Secret - структура данных с которой работает приложение
 type Secret struct {

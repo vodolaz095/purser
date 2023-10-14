@@ -11,6 +11,9 @@ import (
 	"github.com/vodolaz095/purser/model"
 )
 
+// Документация по теме
+// https://restapitutorial.ru/
+
 type createSecretRequest struct {
 	Body string            `json:"body" binding:"required"`
 	Meta map[string]string `json:"meta"`
@@ -35,6 +38,7 @@ func makeLogger(c *gin.Context) zerolog.Logger {
 		Logger()
 }
 
+// ExposeSecretAPI включает ответчики с REST интерфейсом для работы с секретами
 func (tr *Transport) ExposeSecretAPI() {
 	rest := tr.Engine.Group("/api/v1/secret")
 	rest.Use(middlewares.CheckJWT())
@@ -59,7 +63,7 @@ func (tr *Transport) ExposeSecretAPI() {
 		tr.CounterService.Increment(ctx2, "http_get_secret_called", 1)
 		secret, err := tr.SecretService.FindByID(ctx2, id)
 		if err != nil {
-			if errors.Is(err, model.SecretNotFoundError) {
+			if errors.Is(err, model.ErrSecretNotFound) {
 				tr.CounterService.Increment(ctx2, "http_get_secret_not_found", 1)
 				logger.Info().
 					Str("trace_id", span.SpanContext().TraceID().String()).
@@ -91,7 +95,7 @@ func (tr *Transport) ExposeSecretAPI() {
 		tr.CounterService.Increment(ctx2, "http_delete_secret_called", 1)
 		err := tr.SecretService.DeleteByID(ctx2, c.Param("id"))
 		if err != nil {
-			if errors.Is(err, model.SecretNotFoundError) {
+			if errors.Is(err, model.ErrSecretNotFound) {
 				tr.CounterService.Increment(ctx2, "http_delete_secret_not_found", 1)
 				logger.Info().
 					Str("trace_id", span.SpanContext().TraceID().String()).

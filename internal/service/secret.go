@@ -50,7 +50,7 @@ func (ss *SecretService) Create(ctx context.Context, body string, meta map[strin
 	return secret, err
 }
 
-// FindByID ищет секрет по идентификатору, если не нашёл, то возвращает ошибку model.SecretNotFoundError
+// FindByID ищет секрет по идентификатору, если не нашёл, то возвращает ошибку model.ErrSecretNotFound
 func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret, error) {
 	ctxWithTracing, span := ss.Tracer.Start(ctx, "service.FindByID")
 	defer span.End()
@@ -58,7 +58,7 @@ func (ss *SecretService) FindByID(ctx context.Context, id string) (model.Secret,
 	span.AddEvent("Searching for secret by id...")
 	secret, err := ss.Repo.FindByID(ctxWithTracing, id)
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			span.AddEvent("Secret not found")
 		} else { // unexpected error
 			span.SetStatus(codes.Error, err.Error())
@@ -82,7 +82,7 @@ func (ss *SecretService) DeleteByID(ctx context.Context, id string) error {
 	span.AddEvent("Deleting secret by id...")
 	err := ss.Repo.DeleteByID(ctxWithTracing, id)
 	if err != nil {
-		if errors.Is(err, model.SecretNotFoundError) {
+		if errors.Is(err, model.ErrSecretNotFound) {
 			span.AddEvent("Secret not found")
 		} else { // unexpected error
 			span.SetStatus(codes.Error, err.Error())
