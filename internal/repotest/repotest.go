@@ -82,7 +82,9 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 		t.Error("error not thrown for secret not found")
 		return
 	}
-	assert.Nil(t, secretNotFound, "not found secret is not nill")
+	assert.Equal(t, "", secretNotFound.ID, "not found secret's id is not null")
+	assert.Equal(t, "", secretNotFound.Body, "not found secret's body is not null")
+	assert.Empty(t, secretNotFound.Meta, "not found secret's meta is not null")
 	t.Logf("Repo %s returns proper error for secret not found", name)
 
 	err = repo.DeleteByID(ctx, secret.ID)
@@ -102,6 +104,8 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 	} else {
 		t.Error("error not thrown for secret not found")
 	}
-	assert.Nil(t, secretThatShouldBeNotFound, "not found secret is not nill?")
+	assert.Equal(t, "", secretThatShouldBeNotFound.ID, "not found secret's id is not null")
+	assert.Equal(t, "", secretThatShouldBeNotFound.Body, "not found secret's body is not null")
+	assert.Empty(t, secretThatShouldBeNotFound.Meta, "not found secret's meta is not null")
 	t.Logf("Repo %s allows secret to be deleted", name)
 }

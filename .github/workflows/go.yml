@@ -46,6 +46,5 @@ jobs:
 
     - name: run unit test
       env:
-        DRIVER: redis
-        DB_URL: redis://127.0.0.1:6379
+        REDIS_DB_URL: redis://127.0.0.1:6379
       run: go test -v ./...
