@@ -41,6 +41,9 @@ cli_curl:
 cli_grpc:
 	./cmd/purser_grpc_client/example.sh
 
+cli_http_client:
+	./cmd/purser_http_client/example.sh
+
 grpc: protoc
 	protoc \
 		--proto_path=api/grpc \
