@@ -9,6 +9,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
+// https://prometheus.io/docs/instrumenting/exposition_formats/#text-format-example
+
 // metricsToExpose задают метрики, которые экспортируются в Prometheus. Я их нашёл
 // такой командой из кода `$ grep "CounterService.Increment" internal/transport/**/*.go`
 var metricsToExpose = []string{
@@ -50,16 +52,19 @@ func (tr *Transport) ExposeMetrics() {
 		for i := range metricsToExpose {
 			val, found := tr.CounterService.Get(ctx2, metricsToExpose[i])
 			if found {
-				_, err = fmt.Fprintf(c.Writer, "%s %.2f\n",
-					metricsToExpose[i], float64(val),
+				_, err = fmt.Fprintf(c.Writer, "%s{hostname=\"%s\"} %.2f\n",
+					metricsToExpose[i], tr.Hostname, float64(val),
 				)
-				if err != nil {
-					span.RecordError(err)
-					span.SetStatus(codes.Error, err.Error())
-					log.Error().Err(err).
-						Msgf("ошибка отправки данных: %s", err)
-					break
-				}
+			} else {
+				_, err = fmt.Fprintf(c.Writer, "%s{hostname=\"%s\"} 0\n",
+					metricsToExpose[i], tr.Hostname)
+			}
+			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				log.Error().Err(err).
+					Msgf("ошибка отправки данных: %s", err)
+				break
 			}
 		}
 		span.AddEvent("Метрики отправлены")

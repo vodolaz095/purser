@@ -7,6 +7,7 @@ import (
 
 type Transport struct {
 	Engine         *gin.Engine
+	Hostname       string
 	SecretService  *service.SecretService
 	CounterService *service.CounterService
 }

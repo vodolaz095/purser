@@ -17,6 +17,7 @@ import (
 type Options struct {
 	HmacSecret     string
 	ListenOn       string
+	Hostname       string
 	SecretService  *service.SecretService
 	CounterService *service.CounterService
 }
@@ -56,6 +57,7 @@ func Serve(ctx context.Context, opts Options) error {
 	)
 	tr := Transport{
 		Engine:         app,
+		Hostname:       opts.Hostname,
 		SecretService:  opts.SecretService,
 		CounterService: opts.CounterService,
 	}

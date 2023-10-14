@@ -134,6 +134,7 @@ func main() {
 		lErr := httpTransport.Serve(mainCtx, httpTransport.Options{
 			HmacSecret:     config.JwtSecret,
 			ListenOn:       config.ListenHTTP,
+			Hostname:       config.Hostname,
 			SecretService:  &ss,
 			CounterService: &cs,
 		})
