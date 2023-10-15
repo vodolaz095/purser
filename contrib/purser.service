@@ -71,5 +71,38 @@ Environment=LOG_OUTPUT=journald
 Environment=JAEGER_HOST=127.0.0.1
 Environment=JAEGER_PORT=6831
 
+
+# Усиления безопасности
+# https://gist.github.com/ageis/f5595e59b1cddb1513d1b425a323db04
+
+ProtectSystem=strict
+ReadWritePaths=/var/lib/redis/
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+
+PrivateTmp=true
+#PrivateUsers=yes
+PrivateDevices=yes
+NoNewPrivileges=true
+
+RemoveIPC=yes
+
+#CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+# AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# может не работать, если код сжат upx
+# MemoryDenyWriteExecute=yes
+
+RestrictRealtime=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+LockPersonality=yes
+
 [Install]
 WantedBy=multi-user.target
