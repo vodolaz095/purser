@@ -14,7 +14,9 @@ import (
 // SecretService реализует всю бизнес логику работы с сущностью model.Secret
 type SecretService struct {
 	Tracer trace.Tracer
-	Repo   repository.SecretRepo
+	// Repo - интерфейс, под который должен подходить репозиторий, чтобы его можно было использовать в сервисе.
+	// На данный момент в программе реализованы репозитории для memory, redis, mysql и postgresql.
+	Repo repository.SecretRepo
 }
 
 // Ping проверяет, что репозиторий, а также все другие ресурсы\системы, от которых зависит сервис, работоспособны

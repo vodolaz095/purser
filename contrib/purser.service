@@ -1,0 +1,75 @@
+# Документация о синтаксисте systemd юнитов
+# https://www.freedesktop.org/software/systemd/man/systemd.service.html
+
+[Unit]
+Description=Purser - система хранения секретов
+After=network.target
+Requires=docker.service
+Requires=redis.service
+
+
+[Service]
+# при запуске сервиса ждём, когда оно оповестит systemd о готовности, если не оповестило, то перезапускаем
+Type=notify
+
+# Если не хотим включать healthcheck, то комментируем `Type=notify` и `WatchdogSec=30s` а оставляем это:
+# Type=simple
+
+# перезапускаем при любых ошибках
+Restart=always
+# ждём 1 секунду, прежде чем systemd будет перезапускать сервис - чтобы само себя не дыдоснуло
+RestartSec=1s
+# каждые 4/2=2 секунд проверяем статус сервиса с помощью systemd-watchdog
+WatchdogSec=4s
+# если приложение не выключается, через 3 секунд посылаем SIGKILL
+#TimeoutAbortSec=3s # в этой "чудо-убунте" такого ещё нет :-(
+TimeoutStopSec=3s
+
+# от кого запускаем сервис
+User=purser
+Group=purser
+
+# тут можно сделать долбилку в телеграм с помощью http://github.com/vodolaz095/telegramnotify/
+ExecStartPre=/bin/echo "Запускаем сервис регистрации!"
+# команда на запуск
+ExecStart=/usr/bin/purser
+# также можно сделать оповещалку в телеграм
+ExecStartPost=/bin/echo "Cервис purser запустился!"
+# также можно сделать оповещалку в телеграм
+ExecStop=/bin/echo "Останавливаем сервис purser!"
+
+# конфигурация через параметры окружения
+
+# где запускается приложение
+Environment=GO_ENV=production
+Environment=PORT=3000
+Environment=ADDR=""
+Environment=HOSTNAME=purser.local
+
+# как соединятся с хранилищем данных?
+
+# драйвер для базы данных redis
+Environment=DRIVER=redis
+# соединяемся с редисом через unix socket
+Environment=DB_URL="unix://default:secret@/var/lib/redis/redis.sock?db=4"
+# соединяемся с редисом через tcp
+#Environment=DB_URL="redis://default:secret@localhost:6379/4"
+
+# драйвер для базы данных mysql/mariadb
+#Environment=DRIVER=mysql
+#Environment=DB_URL="purser:purser@tcp(127.0.0.1:3306)/purser?charset=utf8&parseTime=True&loc=Local"
+
+# драйвер для базы данных postgresql
+#Environment=DRIVER=postgres
+#Environment=DB_URL="postgres://purser:purser@127.0.0.1:5432/purser"
+
+# конфигурация логгирования
+Environment=LOG_LEVEL=debug
+Environment=LOG_OUTPUT=journald
+
+# конфигурация для телеметрии
+Environment=JAEGER_HOST=127.0.0.1
+Environment=JAEGER_PORT=6831
+
+[Install]
+WantedBy=multi-user.target
