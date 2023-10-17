@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="unit" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="purser" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <envs>
+      <env name="MARIADB_DB_URL" value="root:purser@tcp(127.0.0.1:3306)/purser?charset=utf8&amp;parseTime=True&amp;loc=Local" />
+      <env name="POSTGRES_DB_URL" value="postgres://purser:purser@127.0.0.1:5432/purser" />
+      <env name="REDIS_DB_URL" value="redis://127.0.0.1:6379" />
+    </envs>
+    <root_directory value="$PROJECT_DIR$" />
+    <kind value="DIRECTORY" />
+    <package value="github.com/vodolaz095/purser/" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <method v="2" />
+  </configuration>
+</component>
