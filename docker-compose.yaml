@@ -49,6 +49,19 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    environment:
+      PORT: 3000
+      LOG_OUTPUT: console
+      LOG_LEVEL: trace
+      # выберите один из драйверов базы данных
+      #DRIVER=redis
+      #DB_URL=redis://redis:6379
+
+      #DRIVER=mariadb
+      #DB_URL=root:purser@tcp(mariadb:3306)/purser?charset=utf8&parseTime=True&loc=Local
+
+      #DRIVER=postgres
+      #DB_URL=postgres://purser:purser@postgres:5432/purser
     env_file: .env
     ports:
       - "3000:3000"
