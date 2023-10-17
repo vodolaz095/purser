@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vodolaz095/purser/config"
-	"github.com/vodolaz095/purser/pkg"
+	"github.com/vodolaz095/purser/pkg/jwt"
 )
 
 // CheckJWT проверяет JWT токен из входящего запроса
@@ -26,7 +26,7 @@ func CheckJWT() func(c *gin.Context) {
 		}
 
 		token := strings.TrimPrefix(header, "Bearer ")
-		subject, err := pkg.ValidateJwtAndExtractSubject(token, config.JwtSecret)
+		subject, err := jwt.ValidateJwtAndExtractSubject(token, config.JwtSecret)
 		if err != nil {
 			c.String(http.StatusBadRequest, "Error parsing token: %s", err)
 			c.Abort()

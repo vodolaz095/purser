@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/model"
-	"github.com/vodolaz095/purser/pkg"
+	"github.com/vodolaz095/purser/pkg/misc"
 )
 
 // ValidateRepo используется в юнит тестах, чтобы базово проверить репозиторий
@@ -68,7 +68,7 @@ func ValidateRepo(t *testing.T, name string, repo repository.SecretRepo) {
 	}
 	t.Logf("Repo %s returns proper secret by known key", name)
 
-	unknownID := pkg.UUID()
+	unknownID := misc.UUID()
 
 	secretNotFound, err := repo.FindByID(ctx, unknownID)
 	if err != nil {

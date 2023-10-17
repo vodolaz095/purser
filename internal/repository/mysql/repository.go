@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/vodolaz095/purser/pkg/misc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/plugin/opentelemetry/tracing"
 
 	"github.com/vodolaz095/purser/model"
-	"github.com/vodolaz095/purser/pkg"
 )
 
 type secretData struct {
@@ -90,7 +90,7 @@ func (r *Repository) Create(ctx context.Context, body string, meta map[string]st
 	}
 
 	databaseSecretData := secretData{
-		ID:        pkg.UUID(),
+		ID:        misc.UUID(),
 		Encoded:   data,
 		CreatedAt: time.Now(),
 	}

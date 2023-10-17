@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/vodolaz095/purser/model"
-	"github.com/vodolaz095/purser/pkg"
+	"github.com/vodolaz095/purser/pkg/misc"
 )
 
 // Repository реализует интерфейс SecretRepo с базой данных redis внутри
@@ -37,7 +37,7 @@ func (r *Repository) Close(ctx context.Context) error {
 
 // Create создаёт новый model.Secret
 func (r *Repository) Create(ctx context.Context, body string, meta map[string]string) (model.Secret, error) {
-	id := pkg.UUID()
+	id := misc.UUID()
 	meta["body"] = body
 	pipe := r.client.Pipeline()
 	for k := range meta {

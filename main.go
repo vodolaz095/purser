@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/vodolaz095/purser/internal/transport/prune"
+	"github.com/vodolaz095/purser/pkg/telemetry"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/config"
@@ -21,7 +22,6 @@ import (
 	grpcTransport "github.com/vodolaz095/purser/internal/transport/grpc"
 	httpTransport "github.com/vodolaz095/purser/internal/transport/http"
 	"github.com/vodolaz095/purser/internal/transport/watchdog"
-	"github.com/vodolaz095/purser/pkg"
 )
 
 // Version содержит версию программы, задаётся при процессе компиляции
@@ -34,7 +34,7 @@ func main() {
 	var err error
 
 	// настраиваем логгирование
-	pkg.SetupLogger(config.Hostname, config.Environment, Version)
+	telemetry.SetupLogger(config.Hostname, config.Environment, Version)
 
 	// настраиваем приём сигналов от операционной системы сигналы
 	sigc := make(chan os.Signal, 1)
@@ -52,7 +52,7 @@ func main() {
 
 	// настраиваем соединение с приёмником телеметрии
 	log.Debug().Msgf("Соединяемся с сервисом телеметрии по %s:%s", config.JaegerHost, config.JaegerPort)
-	err = pkg.SetupJaeger(
+	err = telemetry.SetupJaeger(
 		config.Hostname,
 		Version,
 		config.Environment,

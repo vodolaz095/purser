@@ -1,4 +1,4 @@
-package pkg
+package jwt
 
 import (
 	"fmt"
@@ -33,12 +33,18 @@ func ValidateJwtAndExtractSubject(raw string, hmacsecret string) (string, error)
 	if err != nil {
 		return "", err
 	}
+	if issuedAt == nil || issuedAt.IsZero() {
+		return "", fmt.Errorf("token issue time is unknown")
+	}
 	if issuedAt.After(time.Now()) {
 		return "", fmt.Errorf("token issued in future")
 	}
 	expireAt, err := token.Claims.GetExpirationTime()
 	if err != nil {
 		return "", err
+	}
+	if expireAt == nil || expireAt.IsZero() {
+		return "", fmt.Errorf("token expiration time is unknown")
 	}
 	if expireAt.Before(time.Now()) {
 		return "", fmt.Errorf("token expired")

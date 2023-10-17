@@ -4,14 +4,13 @@ import (
 	"context"
 	"strings"
 
+	"github.com/vodolaz095/purser/pkg/jwt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/rs/zerolog/log"
-
-	"github.com/vodolaz095/purser/pkg"
 )
 
 // TokenSubjectKeyType задаёт тип для субъекта jwt токена
@@ -44,7 +43,7 @@ func (ji *ValidateJWTInterceptor) ServerInterceptor(ctx context.Context, req int
 		return nil, status.Error(codes.InvalidArgument, "wrong authorization strategy")
 	}
 	token = strings.TrimPrefix(token, "Bearer ")
-	subject, err := pkg.ValidateJwtAndExtractSubject(token, ji.HmacSecret)
+	subject, err := jwt.ValidateJwtAndExtractSubject(token, ji.HmacSecret)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}

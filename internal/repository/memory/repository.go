@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/vodolaz095/purser/model"
-	"github.com/vodolaz095/purser/pkg"
+	"github.com/vodolaz095/purser/pkg/misc"
 )
 
 // Repository реализует интерфейс SecretRepo и
@@ -44,7 +44,7 @@ func (r *Repository) Create(_ context.Context, body string, meta map[string]stri
 	r.Lock()
 	defer r.Unlock()
 	secret := model.Secret{
-		ID:        pkg.UUID(),
+		ID:        misc.UUID(),
 		Body:      body,
 		Meta:      meta,
 		CreatedAt: time.Now(),

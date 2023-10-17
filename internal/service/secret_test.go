@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vodolaz095/purser/pkg/misc"
 	"go.opentelemetry.io/otel"
 
 	"github.com/vodolaz095/purser/internal/repository"
@@ -14,7 +17,6 @@ import (
 	"github.com/vodolaz095/purser/internal/repository/postgresql"
 	"github.com/vodolaz095/purser/internal/repository/redis"
 	"github.com/vodolaz095/purser/model"
-	"github.com/vodolaz095/purser/pkg"
 )
 
 func secretServiceTester(t *testing.T, repo repository.SecretRepo) {
@@ -56,7 +58,7 @@ func secretServiceTester(t *testing.T, repo repository.SecretRepo) {
 	assert.Equal(t, secret.Body, found.Body, "body differs")
 	assert.Equal(t, secret.Meta, found.Meta, "meta differs")
 
-	empty, err := ss.FindByID(ctx, pkg.UUID())
+	empty, err := ss.FindByID(ctx, misc.UUID())
 	if err != nil {
 		if err != model.ErrSecretNotFound {
 			t.Errorf("wrong error: %s", err)
@@ -90,6 +92,39 @@ func secretServiceTester(t *testing.T, repo repository.SecretRepo) {
 func TestSecretServiceMemory(t *testing.T) {
 	repo := memory.Repository{}
 	secretServiceTester(t, &repo)
+}
+
+func TestSecretService_Prune(t *testing.T) {
+	ctx := context.Background()
+	repo := memory.Repository{}
+
+	err := repo.PutSecret(ctx, model.Secret{
+		ID:        "a",
+		Body:      "aa",
+		Meta:      map[string]string{"aaa": "aaaa"},
+		CreatedAt: time.Now().Add(-model.TTL),
+		ExpireAt:  time.Now(),
+	})
+	if err != nil {
+		t.Errorf("error putting secret directly: %s", err)
+		return
+	}
+	s := SecretService{
+		Tracer: otel.Tracer("unit_test_service4prune"),
+		Repo:   &repo,
+	}
+	err = s.Prune(ctx)
+	if err != nil {
+		t.Errorf("error pruning: %s", err)
+	}
+	_, err = repo.FindByID(ctx, "a")
+	if err != nil {
+		if !errors.Is(err, model.ErrSecretNotFound) {
+			t.Errorf("не та ошибка - %s", err)
+		}
+	} else {
+		t.Errorf("ошибка не выдана при поиске не истекшего секрета")
+	}
 }
 
 func TestSecretServiceMysql(t *testing.T) {

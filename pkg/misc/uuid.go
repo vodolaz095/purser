@@ -1,4 +1,4 @@
-package pkg
+package misc
 
 import (
 	"github.com/google/uuid"
