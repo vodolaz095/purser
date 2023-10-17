@@ -18,13 +18,13 @@ type Repository struct {
 }
 
 // Init настраивает соединение с базой данных
-func (r *Repository) Init(ctx context.Context) error {
+func (r *Repository) Init(_ context.Context) error {
 	r.data = make(map[string]model.Secret, 0)
 	return nil
 }
 
 // Ping проверяет соединение с базой данных
-func (r *Repository) Ping(ctx context.Context) error {
+func (r *Repository) Ping(_ context.Context) error {
 	if r.Broken {
 		return fmt.Errorf("service is broken")
 	}
@@ -32,7 +32,7 @@ func (r *Repository) Ping(ctx context.Context) error {
 }
 
 // Close закрывает соединение с базой данных
-func (r *Repository) Close(ctx context.Context) error {
+func (r *Repository) Close(_ context.Context) error {
 	r.Lock()
 	r.data = nil
 	r.Unlock()
@@ -40,7 +40,7 @@ func (r *Repository) Close(ctx context.Context) error {
 }
 
 // Create создаёт новый model.Secret
-func (r *Repository) Create(ctx context.Context, body string, meta map[string]string) (model.Secret, error) {
+func (r *Repository) Create(_ context.Context, body string, meta map[string]string) (model.Secret, error) {
 	r.Lock()
 	defer r.Unlock()
 	secret := model.Secret{
@@ -55,7 +55,7 @@ func (r *Repository) Create(ctx context.Context, body string, meta map[string]st
 }
 
 // FindByID ищет model.Secret по идентификатору
-func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, error) {
+func (r *Repository) FindByID(_ context.Context, id string) (model.Secret, error) {
 	r.RLock()
 	defer r.RUnlock()
 	secret, found := r.data[id]
@@ -69,7 +69,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (model.Secret, err
 }
 
 // DeleteByID удаляет секрет по идентификатору
-func (r *Repository) DeleteByID(ctx context.Context, id string) error {
+func (r *Repository) DeleteByID(_ context.Context, id string) error {
 	r.Lock()
 	defer r.Unlock()
 	_, found := r.data[id]
@@ -80,8 +80,20 @@ func (r *Repository) DeleteByID(ctx context.Context, id string) error {
 	return model.ErrSecretNotFound
 }
 
+// PutSecret - не стандартный метод для тестирования, позволяющий задать секрет вручную во внутреннем хранилище.
+// Используется для тестов.
+func (r *Repository) PutSecret(_ context.Context, secret model.Secret) error {
+	r.Lock()
+	defer r.Unlock()
+	if len(r.data) == 0 {
+		r.data = make(map[string]model.Secret, 0)
+	}
+	r.data[secret.ID] = secret
+	return nil
+}
+
 // Prune удаляет старые секреты
-func (r *Repository) Prune(ctx context.Context) error {
+func (r *Repository) Prune(_ context.Context) error {
 	r.Lock()
 	defer r.Unlock()
 	keysToDelete := make([]string, 0, len(r.data)) // just in case all records expired
