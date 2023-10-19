@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/vodolaz095/purser/internal/repository"
 	"github.com/vodolaz095/purser/model"
@@ -41,6 +42,16 @@ func (ss *SecretService) Create(ctx context.Context, body string, meta map[strin
 	for k := range meta {
 		span.SetAttributes(attribute.String("meta_"+k, meta[k]))
 	}
+
+	// тут можно сделать всякую хитрую бизнес логику, допустим, если
+	// в секрете встречается слово golang, то ему добавляем мету programming,
+	// и такое поведение сохраниться при любых вызовах сервиса,
+	// и из HTTP транспорта, и из GRPC транспорта и т.д.
+	if strings.Contains(body, "golang") || strings.Contains(body, "Golang") {
+		meta["programming"] = "yes"
+		span.SetAttributes(attribute.Bool("programming", true))
+	}
+
 	secret, err := ss.Repo.Create(ctxWithTracing, body, meta)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())

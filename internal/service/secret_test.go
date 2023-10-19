@@ -87,6 +87,27 @@ func secretServiceTester(t *testing.T, repo repository.SecretRepo) {
 	assert.Equal(t, empty.ID, "", "id differs")
 	assert.Equal(t, empty.Body, "", "body differs")
 	assert.Equal(t, len(empty.Meta), 0, "meta differs")
+
+	// проверяем хитрую бизнес логику
+	programmersSecret, err := ss.Create(ctx, "Мне нравится язык программирования Golang", map[string]string{
+		"a": "b",
+	})
+	if err != nil {
+		t.Errorf("error creating secret: %s", err)
+		return
+	}
+	found, err = ss.FindByID(ctx, programmersSecret.ID)
+	if err != nil {
+		t.Errorf("error creating secret: %s", err)
+		return
+	}
+	assert.Equal(t, programmersSecret.ID, found.ID, "id differs")
+	assert.Equal(t, programmersSecret.Body, found.Body, "body differs")
+	assert.Equal(t, programmersSecret.Meta, found.Meta, "meta differs")
+	assert.Equal(t, programmersSecret.Meta["a"], found.Meta["a"], "meta differs")
+	assert.Equal(t, programmersSecret.Meta["programming"], found.Meta["programming"], "meta differs")
+	assert.Equal(t, "yes", programmersSecret.Meta["programming"], "meta differs")
+	assert.Equal(t, "yes", found.Meta["programming"], "meta differs")
 }
 
 func TestSecretServiceMemory(t *testing.T) {
